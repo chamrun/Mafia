@@ -5,9 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Random;
 
 public class God {
     ArrayList<Handler> actives = new ArrayList<>();
@@ -63,24 +61,35 @@ public class God {
         }
 
         public void introduction() {
-            if (role instanceof Mafia){
-                // Introducing Mafias
-            }
-            else if (role instanceof Mayor){
+            String massage = "Your role is: " + this.role.getName() + "\n";
 
+            if (role instanceof Mafia){
+                for (Handler h: actives) {
+                    if (h.role instanceof Mafia && !h.equals(this)){
+                         massage += h.getUserName() + " is " + h.role.getName() + "\n";
+                    }
+                }
             }
-            else {
-                // Player's Role
+            if (role instanceof Mayor){
+                for (Handler h: actives) {
+                    if (h.role instanceof CityDoctor){
+                        massage += "Doctor of City is " + h.getUserName() + "\n";
+                    }
+                }
             }
+
+            sendToClient(massage);
         }
 
         public void joinChat(){
+            sendToClient("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
+
         }
 
         public void leaveChat(){
         }
 
-        public void listen(String playerListens){
+        public void sendToClient(String playerListens){
             try {
                 out.writeUTF(playerListens);
             }
@@ -140,7 +149,7 @@ public class God {
 
         for (Handler h: actives) {
 
-            h.listen(godSays);
+            h.sendToClient(godSays);
 
         }
     }
@@ -153,8 +162,6 @@ public class God {
         for (Handler h: actives) {
 
             h.role = roles.get(0);
-            h.listen("Your role is: " + roles.get(0).getName());
-
             roles.remove(0);
 
         }
@@ -248,6 +255,8 @@ public class God {
     }
 
     public void turnDay() {
+        System.out.println("Day started.");
+
         for (Handler h: actives) {
 
             h.joinChat();

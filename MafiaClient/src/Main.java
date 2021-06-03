@@ -37,6 +37,10 @@ public class Main {
                 String name;
 
                 switch (r.nextInt(7)){
+                    case 0:
+                        name = "Saber";
+                        break;
+
                     case 1:
                         name = "ChamRun";
                         break;

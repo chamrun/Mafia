@@ -31,25 +31,28 @@ public class Main {
 
         }
 
-        System.out.println("All Players are connected.\n");
+        System.out.println("\nAll Players are connected.\n");
 
-        while (god.actives.size() != nOfAllPlayers){
-            System.out.println("Waiting For Players to register and get ready...");
-
+        int nUnready = nOfAllPlayers - god.actives.size();
+        while (nUnready != 0){
+            System.out.println(nUnready + " Player(s) is (are) not registered yet.");
             Thread.sleep(5000);
+            nUnready = nOfAllPlayers - god.actives.size();
         }
 
         god.setRandomRoles();
-        System.out.println("Roles Are Set.");
+        System.out.println("Roles Are Set.\nPress Enter to start Game!");
 
         sc.nextLine();
 
         god.turnFirstNight();
 
         while (!god.gameIsOver()) {
-            god.turnNight();
+
             god.turnDay();
             god.election();
+            god.turnNight();
+
         }
 
     }
