@@ -47,12 +47,10 @@ public class Main {
 
         //sc.nextLine();
 
-        System.out.println("FIRST_NIGHT");
         god.turnFirstNight();
 
         while (!god.gameIsOver()) {
 
-            System.out.println("DAY");
             god.turnDay();
             System.out.println("ELECTION");
             god.election();

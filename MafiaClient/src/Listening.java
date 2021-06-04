@@ -25,7 +25,7 @@ public class Listening extends Thread{
                     out.writeUTF("LISTEN!");
                 }
                 else {
-                    System.out.println(serverSays + "\n");
+                    System.out.println(serverSays);
                 }
 
 

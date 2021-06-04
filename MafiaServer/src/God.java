@@ -9,6 +9,12 @@ import java.util.Collections;
 
 public class God {
 
+
+
+    public static final String PURPLE = "\033[0;35m";
+    public static final String GREEN = "\033[0;32m";
+    public static final String RESET = "\033[0m";
+
     public static final String COLOR_RESET = "\u001B[0m";
     public static final String COLOR = "\u001B[33m" + "\u001B[40m";
 
@@ -82,10 +88,13 @@ public class God {
                         String clientSays = in.readUTF();
 
                         if (clientSays.equals("OVER")) {
-                            leaveChat();
+                            sendToClient(PURPLE+ "You left chatroom.\n" + RESET);
+                            toChatroom(PURPLE + name + " left chatroom." + RESET);
+                            isInChat = false;
+
                         }
 
-                        toChatroom(COLOR + name + ":" + COLOR_RESET + " " + clientSays);
+                        toChatroom(PURPLE + name + ": " + RESET + clientSays);
 
                     }
 
@@ -163,10 +172,6 @@ public class God {
             }
         }
 
-        public void leaveChat(){
-            isInChat = false;
-            sendToClient("Now you are out of chatroom.");
-        }
 
         public void sendToClient(String playerListens){
             try {
@@ -183,6 +188,9 @@ public class God {
 
         public void vote() {
             sendToClient("VOTE");
+        }
+
+        public void closeChat() {
         }
     }
 
@@ -311,7 +319,9 @@ public class God {
         for (Handler h: actives) {
 
             h.joinChat();
+
         }
+
 
 
         try {
@@ -322,9 +332,15 @@ public class God {
             e.printStackTrace();
         }
 
-        for (Handler h: actives) {
+        closeChat();
 
-            h.leaveChat();
+    }
+
+    private void closeChat() {
+        notifyActives("Chat is Over.\nNow start voting!");
+
+        for (Handler h: actives) {
+            h.isInChat = false;
         }
 
     }
