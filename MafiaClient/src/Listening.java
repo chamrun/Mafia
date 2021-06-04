@@ -28,9 +28,6 @@ public class Listening extends Thread{
                     System.out.println(serverSays);
                 }
 
-
-
-
             }
             catch (SocketException e){
                 System.out.println("God is disconnected! Retrying in 10 seconds...");

@@ -65,6 +65,22 @@ public class Main {
                         name = "Mohammad";
                         break;
 
+                    case 7:
+                        name = "NoOne";
+                        break;
+
+                    case 8:
+                        name = "Ahmad";
+                        break;
+
+                    case 9:
+                        name = "Edd";
+                        break;
+
+                    case 10:
+                        name = "Calvin";
+                        break;
+
                     default:
                         name = ":////";
                         break;
@@ -80,7 +96,7 @@ public class Main {
                     out.writeUTF(name);
                 }
 
-                System.out.println("You've been registered successfully.\n");
+                System.out.println("Hello " + name + "!\nYou've been registered successfully.\n");
                 //sc.nextLine();
 
                 (new Listening(in, out)).start();
@@ -99,16 +115,5 @@ public class Main {
                 e.printStackTrace();
             }
         }
-
-
-
-
-
-
-
-
-
-
-
     }
 }

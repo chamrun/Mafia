@@ -53,7 +53,7 @@ public class God {
         private String name;
         public Role role;
         private boolean isInChat = false;
-        private boolean isVoting = false;
+        private boolean isVoteTime = false;
         private boolean isNightActing = false;
 
         private int nVotes = 0;
@@ -66,7 +66,7 @@ public class God {
             nVotes = 0;
         }
 
-        public int getVote(){
+        public int getNVote(){
             return nVotes;
         }
 
@@ -109,7 +109,7 @@ public class God {
 
                         if (clientSays.equals("OVER")) {
                             sendToClient(PURPLE + "You left chatroom.\n" + RESET);
-                            toChatroom(PURPLE + name + " left chatroom." + RESET);
+                            notifyOthers(PURPLE + name + " left chatroom." + RESET);
                             isInChat = false;
 
                             if (chatroomIsEmpty()){
@@ -118,14 +118,14 @@ public class God {
                                     isChatOn = false;
                                     God.this.notify();
                                 }
-                                notifyActives("Chat is done.");
+                                notifyOthers("Chat is done.");
                             }
 
                             break;
                         }
 
                         if (System.currentTimeMillis() < end) {
-                            toChatroom(PURPLE + name + ": " + RESET + clientSays);
+                            notifyOthers(PURPLE + name + ": " + RESET + clientSays);
                         }
                         else {
                             sendToClient(PURPLE + "ChatTime is up.\n" + RESET);
@@ -140,17 +140,32 @@ public class God {
                         }
                     }
 
-                    if (isVoting){
-                        int voteIndex = Integer.parseInt(in.readUTF());
+                    if (isVoteTime) {
 
-                        while (voteIndex < 0 || actives.size() <= voteIndex
-                                || actives.get(voteIndex).equals(this)){
+                        out.writeUTF("Index: ");
+                        try {
+                            int voteIndex = Integer.parseInt(in.readUTF());
 
-                            out.writeUTF("NOT VALID! Try Again: ");
-                            voteIndex = Integer.parseInt(in.readUTF());
+                            while (voteIndex < 0 || actives.size() <= voteIndex
+                                    || actives.get(voteIndex).equals(this)){
+
+                                out.writeUTF("NOT VALID! Try Again: ");
+                                voteIndex = Integer.parseInt(in.readUTF());
+                            }
+
+                            if (isVoteTime) {
+                                actives.get(voteIndex).addVote();
+                                notifyOthers(name + " voted to: " +
+                                        PURPLE + actives.get(voteIndex).getUserName() + RESET);
+                            }
+                            else {
+                                out.writeUTF("Unfortunately you're late and your vote wasn't counted.");
+                            }
+                        }
+                        catch (NumberFormatException e){
+                            out.writeUTF("Write a number!");
                         }
 
-                        actives.get(voteIndex).addVote();
                     }
 
                     if (isNightActing){
@@ -225,7 +240,7 @@ public class God {
 
         }
 
-        public void toChatroom(String massage){
+        public void notifyOthers(String massage){
             for (Player h: actives){
                 if (!h.equals(this)){
                     h.sendToClient(massage);
@@ -240,7 +255,8 @@ public class God {
                 out.writeUTF(playerListens);
             }
             catch (SocketException e){
-                System.out.println("Player has been disconnected.");
+                System.out.println(name + " disconnected.");
+                actives.remove(this);
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -250,7 +266,7 @@ public class God {
 
         public void vote() throws IOException {
 
-            isVoting = true;
+            isVoteTime = true;
 
             sendToClient("VOTE!");
 
@@ -420,40 +436,52 @@ public class God {
 
     }
 
-    public void election() {
+    public void election() throws InterruptedException {
 
 
         for (Player p: actives) {
 
             try {
                 p.vote();
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        Thread.sleep(10000);
+
+        for (Player p: actives) {
+            p.isVoteTime = false;
         }
 
         Player toDie = null;
         int maxVote = 0;
 
         for (Player p: actives) {
-            if (maxVote == p.getVote()){
+            System.out.println(p.getUserName() + "(" + p.getNVote() + ")...");
+
+            if (maxVote == p.getNVote()){
                 toDie = null;
             }
-            if (maxVote < p.nVotes){
+
+            if (maxVote < p.getNVote()){
                 toDie = p;
+                maxVote = p.getNVote();
             }
         }
 
         if (toDie == null){
-
-
+            System.out.println("No one has enough vote.");
             return;
         }
 
         if (mayorCancels()) {
-            toDie = null;
+            System.out.println("Mayor canceled election.");
             return;
         }
+
+        System.out.println("Gonna kill " + toDie.getUserName());
 
         kill(toDie);
 
@@ -462,11 +490,11 @@ public class God {
     private void kill(Player toDie) {
 
         actives.remove(toDie);
-        notifyActives(toDie.name + " Died!");
+        notifyActives(PURPLE + toDie.name + RESET + " Died!");
 
         toDie.sendToClient("You're Dead!\nDo You Wanna Watch Game? [yes, no]");
 
-        if (saysYes(toDie)){
+        if (saysYes(toDie, true)){
             watchers.add(toDie);
         }
     }
@@ -476,27 +504,37 @@ public class God {
         for (Player p: actives) {
             if (p.role instanceof Mayor) {
                 p.sendToClient("Do You Want to Cancel Election? [yes, no]");
-                return saysYes(p);
+                return saysYes(p, true);
             }
         }
 
         return false;
     }
 
-    private boolean saysYes(Player player){
+    private boolean saysYes(Player player, boolean isFirstAsk){
         try {
 
-            String mayorCommand = player.in.readUTF();
+            if (!isFirstAsk) {
+                player.sendToClient("Invalid! Write \"yes\" or \"no\".");
+            }
 
-            if (mayorCommand.equalsIgnoreCase("yes")) {
+            System.out.print("Waiting for[yes, no]...");
+            String answer = player.in.readUTF();
+            System.out.print(": " + answer);
+
+
+            if (answer.equalsIgnoreCase("yes")) {
                 return true;
             }
-            else if (mayorCommand.equalsIgnoreCase("no")){
+            else if (answer.equalsIgnoreCase("no")){
                 return false;
             }
-            else return saysYes(player);
-
-        } catch (IOException e) {
+            else return saysYes(player, false);
+        }
+        catch (SocketException e){
+            System.out.println("Mayor disconnected.");
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
 
