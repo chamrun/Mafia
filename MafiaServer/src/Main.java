@@ -53,6 +53,7 @@ public class Main {
 
             god.turnDay();
             System.out.println("ELECTION");
+            sc.nextLine();
             god.election();
             System.out.println("NIGHT");
             god.turnNight();

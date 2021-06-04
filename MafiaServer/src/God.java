@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class God {
 
@@ -83,7 +85,10 @@ public class God {
                 actives.add(this);
 
                 while (true) {
-                    while (isInChat) {
+                    long start = System.currentTimeMillis();
+                    long end = start + 300000;
+
+                    while (isInChat && System.currentTimeMillis() < end) {
 
                         String clientSays = in.readUTF();
 
@@ -95,7 +100,6 @@ public class God {
                         }
 
                         toChatroom(PURPLE + name + ": " + RESET + clientSays);
-
                     }
 
                     if (isVoting){
@@ -190,7 +194,12 @@ public class God {
             sendToClient("VOTE");
         }
 
-        public void closeChat() {
+        class closeChat extends TimerTask {
+            @Override
+            public void run() {
+                isInChat = false;
+                sendToClient("ChatTime is up!");
+            }
         }
     }
 
@@ -322,17 +331,6 @@ public class God {
             h.joinChat();
 
         }
-
-        try {
-            Thread.sleep(1000 * 60 * 4);
-            notifyActives("One Minute Till Election...");
-            Thread.sleep(1000 * 60);
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        closeChat();
 
     }
 
