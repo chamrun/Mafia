@@ -20,7 +20,7 @@ public class Main {
         }
          */
 
-        int nOfAllPlayers = 3;
+        int nOfAllPlayers = 2;
 
         ServerSocket server = new ServerSocket(5056);
         System.out.println("Now Clients Should connect to:\n" + server + "\n");

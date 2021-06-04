@@ -22,6 +22,7 @@ public class God {
     ArrayList<Player> watchers = new ArrayList<>();
 
     boolean isChatOn = false;
+    private boolean booleanAnswer = false;
 
 
     public void addActive(ServerSocket server){
@@ -50,10 +51,12 @@ public class God {
 
     class Player extends Thread {
 
+
         private String name;
         public Role role;
         private boolean isInChat = false;
         private boolean isVoteTime = false;
+        public boolean isAskingYes = false;
         private boolean isNightActing = false;
 
         private int nVotes = 0;
@@ -162,10 +165,15 @@ public class God {
                                 out.writeUTF("Unfortunately you're late and your vote wasn't counted.");
                             }
                         }
-                        catch (NumberFormatException e){
-                            out.writeUTF("Write a number!");
+                        catch (NumberFormatException e) {
+                            System.out.println();
                         }
 
+                    }
+
+                    if (isAskingYes){
+                        out.writeUTF("You Have 30 seconds to answer...");
+                        Thread.sleep(30000);
                     }
 
                     if (isNightActing){
@@ -187,7 +195,7 @@ public class God {
                 System.out.println(name + " disconnected.");
                 actives.remove(this);
             }
-            catch (IOException e) {
+            catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -235,7 +243,7 @@ public class God {
 
             isInChat = true;
             System.out.println(getUserName() + " Joined Chat.");
-            sendToClient("DAY!");
+            sendToClient("TALK!");
             sendToClient("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
 
         }
@@ -268,7 +276,7 @@ public class God {
 
             isVoteTime = true;
 
-            sendToClient("VOTE!");
+            sendToClient("TALK!");
 
             StringBuilder massage = new StringBuilder("Who do you vote? (Enter number)\n");
 
@@ -494,7 +502,7 @@ public class God {
 
         toDie.sendToClient("You're Dead!\nDo You Wanna Watch Game? [yes, no]");
 
-        if (saysYes(toDie, true)){
+        if (saysYes(toDie)){
             watchers.add(toDie);
         }
     }
@@ -504,24 +512,28 @@ public class God {
         for (Player p: actives) {
             if (p.role instanceof Mayor) {
                 p.sendToClient("Do You Want to Cancel Election? [yes, no]");
-                return saysYes(p, true);
+                return saysYes(p);
             }
         }
 
         return false;
     }
 
-    private boolean saysYes(Player player, boolean isFirstAsk){
+    private boolean saysYes(Player player){
+        player.isAskingYes = true;
+        player.sendToClient("TALK!");
+
         try {
 
-            if (!isFirstAsk) {
-                player.sendToClient("Invalid! Write \"yes\" or \"no\".");
-            }
-
-            System.out.print("Waiting for[yes, no]...");
             String answer = player.in.readUTF();
-            System.out.print(": " + answer);
 
+            while (!(answer.equalsIgnoreCase("yes"))
+                && !(answer.equalsIgnoreCase("no"))){
+
+                player.sendToClient("Invalid! Write \"yes\" or \"no\".");
+                answer = player.in.readUTF();
+
+            }
 
             if (answer.equalsIgnoreCase("yes")) {
                 return true;
@@ -529,7 +541,6 @@ public class God {
             else if (answer.equalsIgnoreCase("no")){
                 return false;
             }
-            else return saysYes(player, false);
         }
         catch (SocketException e){
             System.out.println("Mayor disconnected.");
@@ -540,7 +551,6 @@ public class God {
 
         return false;
     }
-
 
 
 

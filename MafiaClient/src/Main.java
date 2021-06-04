@@ -104,6 +104,7 @@ public class Main {
 
                 while (true) {
 
+                    //System.out.println(": ");
                     out.writeUTF(sc.nextLine());
 
                 }

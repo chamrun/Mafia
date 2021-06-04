@@ -21,7 +21,7 @@ public class Listening extends Thread{
             try {
                 String serverSays = in.readUTF();
 
-                if (serverSays.equals("DAY!") || serverSays.equals("VOTE!") || serverSays.equals("NIGHT!")){
+                if (serverSays.equals("TALK!")){
                     out.writeUTF("LISTEN!");
                 }
                 else {
@@ -30,13 +30,8 @@ public class Listening extends Thread{
 
             }
             catch (SocketException e){
-                System.out.println("God is disconnected! Retrying in 10 seconds...");
-
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();
-                }
+                System.out.println("God is disconnected :/ ...");
+                return;
             }
             catch (IOException e) {
                 e.printStackTrace();
