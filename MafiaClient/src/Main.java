@@ -83,11 +83,13 @@ public class Main {
                 System.out.println("You've been registered successfully.\n");
                 //sc.nextLine();
 
-                (new Listening(in)).start();
+                (new Listening(in, out)).start();
 
 
                 while (true) {
+
                     out.writeUTF(sc.nextLine());
+
                 }
 
             } catch (ConnectException e) {

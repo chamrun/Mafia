@@ -8,6 +8,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class God {
+
+    public static final String COLOR_RESET = "\u001B[0m";
+    public static final String COLOR = "\u001B[33m" + "\u001B[40m";
+
+
     ArrayList<Handler> actives = new ArrayList<>();
     ArrayList<Handler> watchers = new ArrayList<>();
 
@@ -39,6 +44,9 @@ public class God {
 
         private String name;
         public Role role;
+        private boolean isInChat = false;
+        private boolean isVoting = false;
+        private boolean isNightActing = false;
 
         DataInputStream in;
         DataOutputStream out;
@@ -50,7 +58,63 @@ public class God {
             this.socket = socket;
         }
 
+        @Override
+        public void run() {
 
+            try {
+
+                name = in.readUTF();
+
+                while (nameIsUsed(name)) {
+                    out.writeUTF("BadName");
+                    name = in.readUTF();
+                }
+
+                out.writeUTF("GoodName");
+
+                System.out.println(name + " registered.\n");
+                notifyActives((actives.size() + 1) + " actives.");
+                actives.add(this);
+
+                while (true) {
+                    while (isInChat) {
+
+                        String clientSays = in.readUTF();
+
+                        if (clientSays.equals("OVER")) {
+                            leaveChat();
+                        }
+
+                        toChatroom(COLOR + name + ":" + COLOR_RESET + " " + clientSays);
+
+                    }
+
+                    if (isVoting){
+
+                    }
+
+                    if (isNightActing){
+
+                    }
+
+                    while (true){
+                        if (in.readUTF().equals("LISTEN!")){
+                            break;
+                        }
+                    }
+
+                }
+
+
+
+            }
+            catch (SocketException e){
+                System.out.println(name + " disconnected.");
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         public String getUserName() {
             return name;
@@ -81,12 +145,27 @@ public class God {
             sendToClient(massage);
         }
 
-        public void joinChat(){
+        public void joinChat() {
+
+            isInChat = true;
+            System.out.println(getUserName() + " Joined Chat.");
+            sendToClient("DAY!");
             sendToClient("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
 
         }
 
+        public void toChatroom(String massage){
+            for (Handler h: actives){
+                if (!h.equals(this)){
+                    h.sendToClient(massage);
+
+                }
+            }
+        }
+
         public void leaveChat(){
+            isInChat = false;
+            sendToClient("Now you are out of chatroom.");
         }
 
         public void sendToClient(String playerListens){
@@ -102,36 +181,8 @@ public class God {
         }
 
 
-
-        @Override
-        public void run() {
-
-            try {
-
-                name = in.readUTF();
-
-                while (nameIsUsed(name)) {
-                    out.writeUTF("BadName");
-                    name = in.readUTF();
-                }
-
-                out.writeUTF("GoodName");
-
-                System.out.println(name + " registered.\n");
-                notifyActives((actives.size() + 1) + " actives.");
-                actives.add(this);
-
-            }
-            catch (SocketException e){
-                System.out.println(name + " disconnected.");
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-
         public void vote() {
+            sendToClient("VOTE");
         }
     }
 
@@ -145,11 +196,11 @@ public class God {
     }
 
 
-    public void notifyActives(String godSays) {
+    public void notifyActives(String sayToPlayers) {
 
         for (Handler h: actives) {
 
-            h.sendToClient(godSays);
+            h.sendToClient(sayToPlayers);
 
         }
     }
@@ -262,8 +313,11 @@ public class God {
             h.joinChat();
         }
 
+
         try {
-            Thread.sleep(1000 * 60 * 5);
+            Thread.sleep(1000 * 60 * 4);
+            notifyActives("One Minute Till Election...");
+            Thread.sleep(1000 * 60);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -300,6 +354,8 @@ public class God {
 
     public boolean gameIsOver() {
 
+        /*
+
         int nMafia = 0, nCitizen = 0;
 
         for (Handler h: actives) {
@@ -323,6 +379,8 @@ public class God {
             displayFinalResult(true);
             return true;
         }
+
+         */
 
 
         return false;

@@ -20,7 +20,7 @@ public class Main {
         }
          */
 
-        int nOfAllPlayers = 3;
+        int nOfAllPlayers = 2;
 
         ServerSocket server = new ServerSocket(5056);
         System.out.println("Now Clients Should connect to:\n" + server + "\n");
@@ -31,9 +31,11 @@ public class Main {
 
         }
 
+        Thread.sleep(1000);
         System.out.println("\nAll Players are connected.\n");
 
         int nUnready = nOfAllPlayers - god.actives.size();
+
         while (nUnready != 0){
             System.out.println(nUnready + " Player(s) is (are) not registered yet.");
             Thread.sleep(5000);
@@ -41,19 +43,25 @@ public class Main {
         }
 
         god.setRandomRoles();
-        System.out.println("Roles Are Set.\nPress Enter to start Game!");
+        System.out.println("Roles Are Set.");//nPress Enter to start Game!");
 
-        sc.nextLine();
+        //sc.nextLine();
 
+        System.out.println("FIRST_NIGHT");
         god.turnFirstNight();
 
         while (!god.gameIsOver()) {
 
+            System.out.println("DAY");
             god.turnDay();
+            System.out.println("ELECTION");
             god.election();
+            System.out.println("NIGHT");
             god.turnNight();
 
         }
+
+        System.out.println("END");
 
     }
 

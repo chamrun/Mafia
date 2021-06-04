@@ -1,14 +1,17 @@
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.SocketException;
 
 public class Listening extends Thread{
 
     DataInputStream in;
+    DataOutputStream out;
 
-    public Listening(DataInputStream in){
+    public Listening(DataInputStream in, DataOutputStream out){
 
         this.in = in;
+        this.out = out;
 
     }
 
@@ -16,8 +19,17 @@ public class Listening extends Thread{
     public void run() {
         while (true){
             try {
+                String serverSays = in.readUTF();
 
-                System.out.println(in.readUTF() + "\n");
+                if (serverSays.equals("DAY!") || serverSays.equals("VOTE!") || serverSays.equals("NIGHT!")){
+                    out.writeUTF("LISTEN!");
+                }
+                else {
+                    System.out.println(serverSays + "\n");
+                }
+
+
+
 
             }
             catch (SocketException e){
