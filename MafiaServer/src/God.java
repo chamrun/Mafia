@@ -24,6 +24,9 @@ public class God {
     ArrayList<Handler> actives = new ArrayList<>();
     ArrayList<Handler> watchers = new ArrayList<>();
 
+    boolean isChatOn = false;
+
+
     public void addActive(ServerSocket server){
 
         try {
@@ -85,21 +88,44 @@ public class God {
                 actives.add(this);
 
                 while (true) {
-                    long start = System.currentTimeMillis();
-                    long end = start + 300000;
 
-                    while (isInChat && System.currentTimeMillis() < end) {
+                    long start = System.currentTimeMillis();
+                    long end = start + 20000;
+
+                    while (isInChat) {
 
                         String clientSays = in.readUTF();
 
                         if (clientSays.equals("OVER")) {
-                            sendToClient(PURPLE+ "You left chatroom.\n" + RESET);
+                            sendToClient(PURPLE + "You left chatroom.\n" + RESET);
                             toChatroom(PURPLE + name + " left chatroom." + RESET);
                             isInChat = false;
+
+                            if (chatroomIsEmpty()){
+                                System.out.println("Chatroom is empty.");
+                                synchronized(God.this) {
+                                    isChatOn = false;
+                                    God.this.notify();
+                                }
+                            }
+
                             break;
                         }
 
-                        toChatroom(PURPLE + name + ": " + RESET + clientSays);
+                        if (System.currentTimeMillis() < end) {
+                            toChatroom(PURPLE + name + ": " + RESET + clientSays);
+                        }
+                        else {
+                            sendToClient(PURPLE + "ChatTime is up.\n" + RESET);
+                            isInChat = false;
+
+                            synchronized(God.this) {
+                                isChatOn = false;
+                                God.this.notify();
+                            }
+
+                            break;
+                        }
                     }
 
                     if (isVoting){
@@ -123,6 +149,7 @@ public class God {
             }
             catch (SocketException e){
                 System.out.println(name + " disconnected.");
+                actives.remove(this);
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -201,6 +228,16 @@ public class God {
                 sendToClient("ChatTime is up!");
             }
         }
+    }
+
+    private boolean chatroomIsEmpty() {
+        for (Handler h: actives) {
+            if (h.isInChat){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public boolean nameIsUsed(String name) {
@@ -322,7 +359,9 @@ public class God {
         }
     }
 
-    public void turnDay() {
+    public void turnDay() throws InterruptedException {
+
+        isChatOn = true;
 
         System.out.println("Day started.");
 
@@ -330,6 +369,15 @@ public class God {
 
             h.joinChat();
 
+        }
+
+        synchronized(this) {
+            while(isChatOn) {
+                System.out.println("Waiting for chat to end...");
+                wait();
+            }
+
+            System.out.println("Chat is done.");
         }
 
     }
