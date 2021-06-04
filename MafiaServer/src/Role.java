@@ -3,7 +3,8 @@ interface Role {
     String getName();
 }
 
-abstract class Mafia implements Role{
+abstract class Mafia implements Role {
+
 }
 
 class GodFather extends Mafia{

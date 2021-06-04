@@ -91,7 +91,7 @@ public class God {
                             sendToClient(PURPLE+ "You left chatroom.\n" + RESET);
                             toChatroom(PURPLE + name + " left chatroom." + RESET);
                             isInChat = false;
-
+                            break;
                         }
 
                         toChatroom(PURPLE + name + ": " + RESET + clientSays);
@@ -314,6 +314,7 @@ public class God {
     }
 
     public void turnDay() {
+
         System.out.println("Day started.");
 
         for (Handler h: actives) {
@@ -322,13 +323,12 @@ public class God {
 
         }
 
-
-
         try {
             Thread.sleep(1000 * 60 * 4);
             notifyActives("One Minute Till Election...");
             Thread.sleep(1000 * 60);
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
 
