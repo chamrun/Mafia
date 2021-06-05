@@ -54,10 +54,12 @@ public class God {
 
         private String name;
         public Role role;
+
         private boolean isInChat = false;
         private boolean isVoteTime = false;
         public boolean isAskingYes = false;
         private boolean isNightActing = false;
+        private boolean isSilent = false;
 
         private int nVotes = 0;
 
@@ -204,8 +206,8 @@ public class God {
             return name;
         }
 
-        public void act(){
-            role.act();
+        public String getRoleNAme(){
+            return role.getName();
         }
 
         public void introduction() {
@@ -290,6 +292,8 @@ public class God {
 
         }
 
+        public Player act() {
+        }
     }
 
     private boolean chatroomIsEmpty() {
@@ -485,6 +489,7 @@ public class God {
         }
 
         if (mayorCancels()) {
+            notifyActives("Mayor canceled election.");
             System.out.println("Mayor canceled election.");
             return;
         }
@@ -555,9 +560,72 @@ public class God {
 
 
     public void turnNight() {
+        Player killed = null;
+        Player lectorSaved = null;
+        Player cityDrSaved = null;
+        Player silent = null;
+        Player sniped = null;
+
+
         for (Player p: actives){
-            p.act();
+            switch (p.getRoleNAme()){
+                case "GodFather":
+                    killed = p.act();
+                    break;
+
+                case "Doctor Lector":
+                    lectorSaved = p.act();
+                    break;
+
+                case "Simple Mafia":
+                    p.act();
+
+                case "City Doctor":
+                    cityDrSaved = p.act();
+                    break;
+
+                case "Psychic":
+                    silent = p.act();
+                    break;
+
+                case "Sniper":
+                    sniped = p.act();
+                    if (sniped.role instanceof Citizen){
+                        kill(p);
+                    }
+                    break;
+
+                default:
+                    p.sendToClient("You Don't have to act now. /n" +
+                            "just wait for the night to end and try to hold on :D");
+                    break;
+            }
         }
+
+        if (!killed.equals(cityDrSaved) && !killed.equals(null)){
+            if (killed.role instanceof Bulletproof){
+                if (((Bulletproof)killed.role).isShot){
+                    kill(killed);
+                }
+                else {
+                    ((Bulletproof)killed.role).isShot = true;
+                }
+            }
+            else {
+                kill(killed);
+            }
+        }
+
+        if (!sniped.equals(lectorSaved) && !sniped.equals(null)){
+            kill(sniped);
+        }
+
+        mute(silent);
+
+    }
+
+    private void mute(Player silent) {
+        silent.
     }
 
     public boolean gameIsOver() {

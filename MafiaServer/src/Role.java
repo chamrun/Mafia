@@ -1,6 +1,7 @@
 interface Role {
     void act();
     String getName();
+
 }
 
 abstract class Mafia implements Role {
@@ -11,7 +12,7 @@ class GodFather extends Mafia{
 
     @Override
     public void act() {
-        // Killing Someone
+
     }
 
     @Override
@@ -29,7 +30,7 @@ class DoctorLector extends Mafia{
 
     @Override
     public String getName() {
-        return "DoctorLector";
+        return "Doctor Lector";
     }
 }
 
@@ -42,7 +43,7 @@ class SimpleMafia extends Mafia{
 
     @Override
     public String getName() {
-        return "SimpleMafia";
+        return "Simple Mafia";
     }
 }
 
@@ -59,7 +60,7 @@ class CityDoctor extends Citizen{
 
     @Override
     public String getName() {
-        return "CityDoctor";
+        return "City Doctor";
     }
 }
 
@@ -86,15 +87,6 @@ class Mayor extends Citizen{
 
 class Detective extends Citizen{
 
-
-    public boolean cancelElection(){
-        if (true) {
-            return true;
-        }
-
-        else return false;
-    }
-
     @Override
     public void act() {
     }
@@ -109,14 +101,6 @@ class Detective extends Citizen{
 class Psychic extends Citizen{
 
 
-    public boolean cancelElection(){
-        if (true) {
-            return true;
-        }
-
-        else return false;
-    }
-
     @Override
     public void act() {
     }
@@ -130,14 +114,8 @@ class Psychic extends Citizen{
 
 class Bulletproof extends Citizen{
 
+    boolean isShot = false;
 
-    public boolean cancelElection(){
-        if (true) {
-            return true;
-        }
-
-        else return false;
-    }
 
     @Override
     public void act() {
@@ -151,14 +129,7 @@ class Bulletproof extends Citizen{
 
 class Sniper extends Citizen{
 
-
-    public boolean cancelElection(){
-        if (true) {
-            return true;
-        }
-
-        else return false;
-    }
+    boolean hasBullet = true;
 
     @Override
     public void act() {
@@ -173,21 +144,13 @@ class Sniper extends Citizen{
 class SimpleCitizen extends Citizen{
 
 
-    public boolean cancelElection(){
-        if (true) {
-            return true;
-        }
-
-        else return false;
-    }
-
     @Override
     public void act() {
     }
 
     @Override
     public String getName() {
-        return "SimpleCitizen";
+        return "Simple Citizen";
     }
 }
 
