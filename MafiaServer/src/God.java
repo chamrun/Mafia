@@ -48,14 +48,6 @@ public class God {
 
     }
 
-    private void notifyWatchers(String sayToPlayers) {
-
-        for (Player p: watchers) {
-
-            p.sendToClient(sayToPlayers);
-
-        }
-    }
 
     public void setRandomRoles() {
 
@@ -206,18 +198,22 @@ public class God {
                 System.out.println("Waiting for Voting to end...");
                 wait();
             }
-
             System.out.println("Election is done.");
         }
 
         for (Player p: actives) {
-            if (p.getAnswerOfWho() != -1) {
-                System.out.println(p.getAnswerOfWho() != -1);
-                System.out.println("v:" + p.getAnswerOfWho());
+            int answer = p.getAnswerOfWho();
 
-                Player target = actives.get(p.getAnswerOfWho());
-                target.addVote();
-                p.notifyOthers(p.getUserName() + " voted to: " + PURPLE + target.getUserName() + RESET);
+            if (answer != -1) {
+
+                try {
+                    Player target = actives.get(answer);
+                    target.addVote();
+                    p.notifyOthers(p.getUserName() + " voted to: " + PURPLE + target.getUserName() + RESET);
+                }
+                catch (IndexOutOfBoundsException e){
+                    System.out.println(p.getUserName() + " didn't vote.");
+                }
 
             }
         }
@@ -244,7 +240,7 @@ public class God {
         }
 
         if (mayorCancels()) {
-            notifyActives("Mayor canceled election.");
+            notifyEverybody("Mayor canceled election.");
             System.out.println("Mayor canceled election.");
             return;
         }
@@ -253,16 +249,36 @@ public class God {
 
         kill(toDie);
 
+
+        for (Player p: actives){
+            p.resetVote();
+        }
     }
 
-    public void notifyActives(String sayToPlayers) {
+
+
+    public void notifyEverybody(String massage) {
 
         for (Player p : actives) {
-
-            p.sendToClient(sayToPlayers);
-
+            p.sendToClient(massage);
         }
 
+        for (Player p: watchers) {
+            p.sendToClient(massage);
+        }
+
+    }
+
+    public void notifyEverybody(String massage, Player except) {
+        for (Player p: actives){
+            if (!p.equals(except)){
+                p.sendToClient(massage);
+            }
+        }
+
+        for (Player p: watchers) {
+            p.sendToClient(massage);
+        }
     }
 
     public boolean nobodyIsBusy() {
@@ -303,11 +319,9 @@ public class God {
     private void kill(Player toDie) {
 
         actives.remove(toDie);
-        notifyActives(PURPLE + toDie.getUserName() + RESET + " Died!");
+        notifyEverybody(PURPLE + toDie.getUserName() + RESET + " Died!");
 
-        toDie.sendToClient("You're Dead!\nDo You Wanna Watch Game? [yes, no]");
-
-        if (saysYes(toDie)){
+        if (toDie.askYesOrNo("You're Dead!\nDo You Wanna Watch Game?")){
             watchers.add(toDie);
         }
     }
@@ -321,43 +335,8 @@ public class God {
             return false;
         }
 
-        mayor.sendToClient("Do You Want to Cancel Election? [yes, no]");
-        return saysYes(mayor);
+        return mayor.askYesOrNo("Do You Want to Cancel Election?");
 
-    }
-
-    private boolean saysYes(Player player){
-
-        player.isBusy = true;
-        player.sendToClient("TALK!");
-
-        try {
-
-            String answer = player.in.readUTF();
-
-            while (!(answer.equalsIgnoreCase("yes"))
-                && !(answer.equalsIgnoreCase("no"))){
-
-                player.sendToClient("Invalid! Write \"yes\" or \"no\".");
-                answer = player.in.readUTF();
-
-            }
-
-            if (answer.equalsIgnoreCase("yes")) {
-                return true;
-            }
-            else if (answer.equalsIgnoreCase("no")){
-                return false;
-            }
-        }
-        catch (SocketException e){
-            System.out.println("Mayor disconnected.");
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return false;
     }
 
     public void turnNight() throws InterruptedException {
@@ -368,49 +347,61 @@ public class God {
         Player silent = null;
         Player sniped = null;
         Player onDetect = null;
+        boolean inquiry = false;
 
 
         for (Player p: actives){
-            p.act();
+            p.nightAct();
+
+            if (p.role instanceof Bulletproof){
+                inquiry = p.askYesOrNo("Do you want inquiry?");
+            }
         }
 
-
-        Thread.sleep(10000);
-
+        synchronized(this) {
+            while(waiting) {
+                System.out.println("Waiting for Night to end...");
+                wait();
+            }
+            System.out.println("Night is done.");
+        }
 
         for (Player p: actives){
-            switch (p.getRoleNAme()){
-                case "GodFather":
-                    killed = actives.get(p.getAnswerOfWho());
-                    break;
+            int answer = p.getAnswerOfWho();
+            if (answer != -1) {
 
-                case "Doctor Lector":
-                    lectorSaved = actives.get(p.getAnswerOfWho());
-                    break;
+                switch (p.getRoleNAme()) {
+                    case "GodFather":
+                        killed = actives.get(answer);
+                        break;
 
-                case "City Doctor":
-                    cityDrSaved = actives.get(p.getAnswerOfWho());
-                    break;
+                    case "Doctor Lector":
+                        lectorSaved = actives.get(answer);
+                        break;
 
-                case "Psychic":
-                    silent = actives.get(p.getAnswerOfWho());
-                    break;
+                    case "City Doctor":
+                        cityDrSaved = actives.get(answer);
+                        break;
 
-                case "Sniper":
-                    sniped = actives.get(p.getAnswerOfWho());
-                    if (sniped.role instanceof Citizen){
-                        kill(p);
-                    }
-                    break;
+                    case "Psychic":
+                        silent = actives.get(answer);
+                        break;
 
-                case "Detective":
-                    onDetect = actives.get(p.getAnswerOfWho());
-                    break;
+                    case "Detective":
+                        onDetect = actives.get(p.getAnswerOfWho());
+                        break;
 
-                default:
-                    p.sendToClient("You Don't have to act now. /n" +
-                            "just wait for the night to end and try to hold on :D");
-                    break;
+                    case "Sniper":
+                        sniped = actives.get(answer);
+                        if (sniped.role instanceof Citizen) {
+                            kill(p);
+                        }
+                        break;
+
+                    default:
+                        System.out.println("Unreachable statement in night.");
+                        break;
+                }
             }
         }
 
@@ -438,6 +429,22 @@ public class God {
 
         if (onDetect != null) {
             detectionResult(onDetect);
+        }
+        if (inquiry){
+            int nMafia = 0;
+            int nCitizen = 0;
+
+            for (Player p: actives) {
+                if (p.role instanceof Mafia){
+                    nMafia++;
+                }
+                else {
+                    nCitizen++;
+                }
+            }
+
+            notifyEverybody("Alive citizens: " + nCitizen + "\nAlive Mafias: " + nMafia);
+
         }
 
     }
@@ -515,15 +522,7 @@ public class God {
 
     }
 
-    public void send(Player from, String massage) {
-        for (Player p: actives){
-            if (!p.equals(from)){
-                p.sendToClient(massage);
-            }
-        }
 
-        notifyWatchers(massage);
-    }
 
     public int nActives(){
         return actives.size();

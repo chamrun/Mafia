@@ -38,7 +38,7 @@ public class ChatHandler extends Thread{
                 String clientSays = in.readUTF();
 
                 if (end < System.currentTimeMillis()) {
-                    god.notifyActives("Chat time is up.");
+                    god.notifyEverybody("Chat time is up.");
                     god.stopWaiting();
                     return;
                 }
@@ -49,7 +49,7 @@ public class ChatHandler extends Thread{
                     player.isBusy = false;
 
                     if (god.nobodyIsBusy()) {
-                        god.notifyActives("Chatroom is empty.");
+                        god.notifyEverybody("Chatroom is empty.");
                         god.stopWaiting();
                     }
 

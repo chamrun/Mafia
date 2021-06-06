@@ -70,7 +70,7 @@ class Mayor extends Citizen{
 
     @Override
     public String actQuestion() {
-        return "Unreachable statement;";
+        return null;
     }
 
     @Override
@@ -111,7 +111,7 @@ class Psychic extends Citizen{
 class Bulletproof extends Citizen{
 
     boolean isShot = false;
-
+    int nInquiry = 2;
 
     @Override
     public String actQuestion() {
@@ -144,7 +144,7 @@ class SimpleCitizen extends Citizen{
 
     @Override
     public String actQuestion() {
-        return "Unreachable statement;";
+        return null;
     }
 
     @Override

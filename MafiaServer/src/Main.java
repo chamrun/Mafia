@@ -50,13 +50,14 @@ public class Main {
         while (god.gameIsNotOver()) {
 
             System.out.println("Day...");
-            //god.startChatroom();
+            god.startChatroom();
 
             System.out.println("Election...");
             god.election();
 
             if (god.gameIsNotOver()) {
                 System.out.println("Night...");
+                sc.nextLine();
                 god.turnNight();
             }
             else {

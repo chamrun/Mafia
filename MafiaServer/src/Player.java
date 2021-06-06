@@ -78,37 +78,8 @@ public class Player extends Thread {
             out.writeUTF("GoodName");
 
             System.out.println(name + " registered.\n");
-            god.notifyActives((god.nActives() + 1) + " actives.");
+            god.notifyEverybody((god.nActives() + 1) + " actives.");
             god.addPlayer(this);
-
-            /*
-            while (true) {
-
-                long start = System.currentTimeMillis();
-                long end = start + 20000;
-
-                if (isAskedWho) {
-
-
-
-                }
-
-                if (isAskedYes){
-                    out.writeUTF("You Have 30 seconds to answer...");
-                    Thread.sleep(30000);
-                }
-
-                while (true){
-                    if (in.readUTF().equals("LISTEN!")){
-                        break;
-                    }
-                }
-
-            }
-
-
-             */
-
 
         }
         catch (SocketException e){
@@ -160,46 +131,64 @@ public class Player extends Thread {
     }
 
 
-    public int vote() throws IOException {
+    public void vote() throws IOException {
 
         isBusy = true;
 
-        AskingWhoHandler askingWhoHandler = new AskingWhoHandler(god, this, socket, in, out, "VOTE");
+        AskingHandler askingWhoHandler = new AskingHandler(god, this, socket, in, out, "VOTE");
         askingWhoHandler.start();
-
-        return answerOfWho;
 
     }
 
-    public int act() {
+    public void setAnswerOfWho(int answer) {
+        answerOfWho = answer;
+        isBusy = false;
+        if (god.nobodyIsBusy()){
+            god.stopWaiting();
+        }
+    }
+
+    public boolean askYesOrNo(String question){
+        sendToClient(question + "[yes, no]");
 
         isBusy = true;
 
-        //sendToClient("TALK!");
+        AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "YesOrNo");
+        askingHandler.start();
 
-        StringBuilder massage = new StringBuilder(role.actQuestion() + "\n");
+        // Should We Wait Here?
 
+        return answerIsYes;
 
-        for (int index = 0; index < god.nActives(); index++) {
-            massage.append(index).append(". ").append(god.getUserName(index)).append("\n");
+    }
+
+    boolean answerIsYes;
+
+    public void endYesOrNo(boolean answerIsYes) {
+        System.out.println("answerIsYes: " + answerIsYes);
+        this.answerIsYes = answerIsYes;
+        isBusy = false;
+    }
+
+    public void nightAct() {
+
+        if (this.role.actQuestion() == null){
+            sendToClient("Just wait and try to hold on :D");
+            return;
         }
-        sendToClient(massage.toString());
 
-        /*
-        if (answerOfWho != -1) {
-            answerOfWho.addVote();
-            answerOfWho = -1;
-        }
+        isBusy = true;
 
-         */
+        sendToClient(role.actQuestion());
 
-        return answerOfWho;
+        AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "Night");
+        askingHandler.start();
 
 
     }
 
     public void notifyOthers(String massage){
-        god.send(this, massage);
+        god.notifyEverybody(massage, this);
     }
 
 
@@ -222,11 +211,5 @@ public class Player extends Thread {
         isSilent = true;
     }
 
-    public void endVote(int answer) {
-        answerOfWho = answer;
-        isBusy = false;
-        if (god.nobodyIsBusy()){
-            god.stopWaiting();
-        }
-    }
+
 }
