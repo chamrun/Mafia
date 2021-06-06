@@ -45,18 +45,18 @@ public class Main {
         god.setRandomRoles();
         System.out.println("Roles Are Set.");//nPress Enter to start Game!");
 
-        //sc.nextLine();
+        sc.nextLine();
 
         god.turnFirstNight();
 
         while (!god.gameIsOver()) {
 
-            //god.turnDay();
-            //System.out.println("ELECTION");
-            //sc.nextLine();
-            //god.election();
+            god.turnDay();
+            System.out.println("ELECTION");
+            sc.nextLine();
+            god.election();
             System.out.println("NIGHT");
-            //sc.nextLine();
+            sc.nextLine();
             god.turnNight();
 
         }

@@ -197,11 +197,11 @@ public class God {
         Thread.sleep(10000);
 
         for (Player p: actives) {
-            Player target =p.getAnswerOfWho();
+            Player target = actives.get(p.getAnswerOfWho());
             if (target != null) {
                 target.addVote();
                 p.notifyOthers(p.getUserName() + " voted to: " +
-                        PURPLE + p.getAnswerOfWho().getUserName() + RESET);
+                        PURPLE + target.getUserName() + RESET);
             }
         }
 
@@ -350,30 +350,30 @@ public class God {
         for (Player p: actives){
             switch (p.getRoleNAme()){
                 case "GodFather":
-                    killed = p.getAnswerOfWho();
+                    killed = actives.get(p.getAnswerOfWho());
                     break;
 
                 case "Doctor Lector":
-                    lectorSaved = p.getAnswerOfWho();
+                    lectorSaved = actives.get(p.getAnswerOfWho());
                     break;
 
                 case "City Doctor":
-                    cityDrSaved = p.getAnswerOfWho();
+                    cityDrSaved = actives.get(p.getAnswerOfWho());
                     break;
 
                 case "Psychic":
-                    silent = p.getAnswerOfWho();
+                    silent = actives.get(p.getAnswerOfWho());
                     break;
 
                 case "Sniper":
-                    sniped = p.getAnswerOfWho();
+                    sniped = actives.get(p.getAnswerOfWho());
                     if (sniped.role instanceof Citizen){
                         kill(p);
                     }
                     break;
 
                 case "Detective":
-                    onDetect = p.getAnswerOfWho();
+                    onDetect = actives.get(p.getAnswerOfWho());
                     break;
 
                 default:
