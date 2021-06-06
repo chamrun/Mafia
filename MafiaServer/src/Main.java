@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static God god = new God();
+    private static final God god = new God();
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -31,7 +31,7 @@ public class Main {
 
         }
 
-        Thread.sleep(1000);
+        Thread.sleep(500);
         System.out.println("\nAll Players are connected.\n");
 
         int nUnready = nOfAllPlayers - god.actives.size();
@@ -45,26 +45,28 @@ public class Main {
         god.setRandomRoles();
         System.out.println("Roles Are Set.");//nPress Enter to start Game!");
 
-        sc.nextLine();
-
         god.turnFirstNight();
 
-        while (!god.gameIsOver()) {
+        while (god.gameIsNotOver()) {
 
+            System.out.println("Day...");
             god.turnDay();
-            System.out.println("ELECTION");
-            sc.nextLine();
+
+            System.out.println("Election...");
             god.election();
-            System.out.println("NIGHT");
-            sc.nextLine();
-            god.turnNight();
+
+            if (god.gameIsNotOver()) {
+                System.out.println("Night...");
+                god.turnNight();
+            }
+            else {
+                break;
+            }
 
         }
 
-        System.out.println("END");
+        System.out.println("... The end.");
 
     }
-
-
 
 }

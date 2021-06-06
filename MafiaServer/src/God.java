@@ -13,23 +13,22 @@ public class God {
     public static final String PURPLE = "\033[0;35m";
     public static final String RESET = "\033[0m";
 
+    /*
     public static final String GREEN = "\033[0;32m";
-
-
     public static final String COLOR_RESET = "\u001B[0m";
     public static final String COLOR = "\u001B[33m" + "\u001B[40m";
-
+     */
 
     ArrayList<Player> actives = new ArrayList<>();
     ArrayList<Player> watchers = new ArrayList<>();
 
     boolean isChatOn = false;
-    private boolean booleanAnswer = false;
 
 
     public void addActive(ServerSocket server){
 
         try {
+
             Socket socket = server.accept();
             System.out.println("New Client Connected.");
 
@@ -153,9 +152,11 @@ public class God {
     }
 
     public void turnFirstNight() {
+
         for (Player p: actives){
             p.introduction();
         }
+
     }
 
     public void turnDay() throws InterruptedException {
@@ -271,6 +272,17 @@ public class God {
         return actives.get(index).getUserName();
     }
 
+    public Player getPlayer(String role){
+
+        for (Player p: actives) {
+            if (p.role.getName().equals(role)) {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
     private void kill(Player toDie) {
 
         actives.remove(toDie);
@@ -285,14 +297,16 @@ public class God {
 
     private boolean mayorCancels(){
 
-        for (Player p: actives) {
-            if (p.role instanceof Mayor) {
-                p.sendToClient("Do You Want to Cancel Election? [yes, no]");
-                return saysYes(p);
-            }
+
+        Player mayor = getPlayer("Mayor");
+
+        if (mayor == null){
+            return false;
         }
 
-        return false;
+        mayor.sendToClient("Do You Want to Cancel Election? [yes, no]");
+        return saysYes(mayor);
+
     }
 
     private boolean saysYes(Player player){
@@ -412,29 +426,29 @@ public class God {
     }
 
     private void detectionResult(Player onDetect) {
-        for (Player p: actives) {
-            if (p.role instanceof Detective) {
-                if (onDetect.role instanceof GodFather) {
-                    if (((GodFather) onDetect.role).hasBeenDetectedBefore) {
-                        p.sendToClient(": Mafia");
-                    } else {
-                        ((GodFather) onDetect.role).hasBeenDetectedBefore = false;
-                    }
-                } else {
-                    if (onDetect.role instanceof Mafia) {
-                        p.sendToClient(": Mafia");
-                    } else {
-                        p.sendToClient(": Citizen");
-                    }
-                }
-                return;
-            }
 
+        Player detective = getPlayer("Detective");
+
+        if (onDetect.role instanceof GodFather) {
+            if (((GodFather) onDetect.role).hasBeenDetectedBefore) {
+                detective.sendToClient(": Mafia");
+            }
+            else {
+                ((GodFather) onDetect.role).hasBeenDetectedBefore = false;
+            }
+        }
+        else {
+            if (onDetect.role instanceof Mafia) {
+                detective.sendToClient(onDetect.getUserName() + " is Mafia");
+            }
+            else {
+                detective.sendToClient(onDetect.getUserName() + " is Citizen");
+            }
         }
     }
 
 
-    public boolean gameIsOver() {
+    public boolean gameIsNotOver() {
 
         /*
 
@@ -453,19 +467,19 @@ public class God {
 
         if (nMafia == 0){
             displayFinalResult(false);
-            return true;
+            return false;
         }
 
         if (nCitizen <= nMafia){
 
             displayFinalResult(true);
-            return true;
+            return false;
         }
 
          */
 
 
-        return false;
+        return true;
 
     }
 
@@ -487,9 +501,7 @@ public class God {
             }
         }
 
-        for (Player p: watchers){
-            p.sendToClient(massage);
-        }
+        notifyWatchers(massage);
     }
 
     public int nActives(){
@@ -500,10 +512,11 @@ public class God {
         if (requester.role instanceof Citizen){
             return "Access Denied.";
         }
+
         else {
             StringBuilder massageBuilder = new StringBuilder();
             for (Player p: actives) {
-                if (p.role instanceof Mafia && !p.equals(this)){
+                if (p.role instanceof Mafia && !p.equals(requester)){
                     massageBuilder.append(p.getUserName()).append(" is ").append(p.role.getName()).append("\n");
                 }
             }
@@ -512,12 +525,18 @@ public class God {
     }
 
     public String whoIsCityDoctor(Player requester){
-        for (Player h: actives) {
-            if (h.role instanceof CityDoctor) {
-                return "Doctor of City is " + h.getUserName() + "\n";
-            }
+
+        if (!(requester.role instanceof Mayor)){
+            return "Access denied.";
         }
-        return "No Doctor";
+
+        Player cityDoctor = getPlayer("City Doctor");
+
+        if (cityDoctor == null){
+            return "No doctor was found in the city.";
+        }
+
+        return "Doctor of City is " + getPlayer("City Doctor") + "\n";
     }
 
     public void addPlayer(Player player) {

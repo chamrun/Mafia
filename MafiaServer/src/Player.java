@@ -186,11 +186,10 @@ public class Player extends Thread {
             return;
         }
 
-        if (!(role instanceof Mafia)) {
+        if (role instanceof Citizen) {
             sendToClient(massage);
             return;
         }
-
 
         sendToClient(massage + god.getMafiaList(this));
 
