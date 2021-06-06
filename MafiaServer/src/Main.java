@@ -20,7 +20,7 @@ public class Main {
         }
          */
 
-        int nOfAllPlayers = 2;
+        int nOfAllPlayers = 3;
 
         ServerSocket server = new ServerSocket(5056);
         System.out.println("Now Clients Should connect to:\n" + server + "\n");
@@ -52,11 +52,11 @@ public class Main {
         while (!god.gameIsOver()) {
 
             //god.turnDay();
-            System.out.println("ELECTION");
+            //System.out.println("ELECTION");
             //sc.nextLine();
-            god.election();
+            //god.election();
             System.out.println("NIGHT");
-            sc.nextLine();
+            //sc.nextLine();
             god.turnNight();
 
         }

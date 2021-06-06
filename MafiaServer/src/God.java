@@ -11,8 +11,10 @@ public class God {
 
 
     public static final String PURPLE = "\033[0;35m";
-    public static final String GREEN = "\033[0;32m";
     public static final String RESET = "\033[0m";
+
+    public static final String GREEN = "\033[0;32m";
+
 
     public static final String COLOR_RESET = "\u001B[0m";
     public static final String COLOR = "\u001B[33m" + "\u001B[40m";
@@ -34,7 +36,7 @@ public class God {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            Player player = new Player(in, out, socket);
+            Player player = new Player(this, in, out, socket);
             player.start();
 
         }
@@ -47,304 +49,9 @@ public class God {
 
     }
 
+    public void notifyWatchers(String sayToPlayers) {
 
-
-    class Player extends Thread {
-
-
-        private String name;
-        public Role role;
-
-        private boolean isInChat = false;
-        public boolean isAskedYes = false;
-        private boolean isSilent = false;
-
-        private boolean isAskedWho = false;
-        private Player answerOfWho = null;
-
-        private int nVotes = 0;
-
-        public void addVote(){
-            nVotes++;
-        }
-
-        public void resetVote(){
-            nVotes = 0;
-        }
-
-        public int getNVote(){
-            return nVotes;
-        }
-
-        DataInputStream in;
-        DataOutputStream out;
-        Socket socket;
-
-        public Player(DataInputStream in, DataOutputStream out, Socket socket) {
-            this.in = in;
-            this.out = out;
-            this.socket = socket;
-        }
-
-        @Override
-        public void run() {
-
-            try {
-
-                name = in.readUTF();
-
-                while (nameIsUsed(name)) {
-                    out.writeUTF("BadName");
-                    name = in.readUTF();
-                }
-
-                out.writeUTF("GoodName");
-
-                System.out.println(name + " registered.\n");
-                notifyActives((actives.size() + 1) + " actives.");
-                actives.add(this);
-
-                while (true) {
-
-                    long start = System.currentTimeMillis();
-                    long end = start + 20000;
-
-                    while (isInChat) {
-
-                        String clientSays = in.readUTF();
-
-                        if (clientSays.equals("OVER")) {
-                            sendToClient(PURPLE + "You left chatroom.\n" + RESET);
-                            notifyOthers(PURPLE + name + RESET + " left chatroom.");
-                            isInChat = false;
-
-                            if (chatroomIsEmpty()){
-                                System.out.println("Chatroom is empty.");
-                                synchronized(God.this) {
-                                    isChatOn = false;
-                                    God.this.notify();
-                                }
-                                notifyOthers("Chat is done.");
-                            }
-
-                            break;
-                        }
-
-                        if (System.currentTimeMillis() < end) {
-                            notifyOthers(PURPLE + name + ": " + RESET + clientSays);
-                        }
-                        else {
-                            sendToClient(PURPLE + "ChatTime is up.\n" + RESET);
-                            isInChat = false;
-
-                            synchronized(God.this) {
-                                isChatOn = false;
-                                God.this.notify();
-                            }
-
-                            break;
-                        }
-                    }
-
-                    if (isAskedWho) {
-
-                        out.writeUTF("Index: ");
-                        try {
-                            int voteIndex = Integer.parseInt(in.readUTF());
-
-                            while (voteIndex < 0 || actives.size() <= voteIndex
-                                    || actives.get(voteIndex).equals(this)){
-
-                                out.writeUTF("NOT VALID! Try Again: ");
-                                voteIndex = Integer.parseInt(in.readUTF());
-                            }
-
-                            if (isAskedWho) {
-                                answerOfWho = actives.get(voteIndex);
-                                notifyOthers(name + " voted to: " +
-                                        PURPLE + actives.get(voteIndex).getUserName() + RESET);
-                            }
-                            else {
-                                out.writeUTF("Unfortunately you're late and your vote wasn't counted.");
-                            }
-
-                        }
-                        catch (NumberFormatException e) {
-                            System.out.println();
-                        }
-
-                    }
-
-                    if (isAskedYes){
-                        out.writeUTF("You Have 30 seconds to answer...");
-                        Thread.sleep(30000);
-                    }
-
-                    while (true){
-                        if (in.readUTF().equals("LISTEN!")){
-                            break;
-                        }
-                    }
-
-                }
-
-
-
-            }
-            catch (SocketException e){
-                System.out.println(name + " disconnected.");
-                actives.remove(this);
-            }
-            catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public String getUserName() {
-            return name;
-        }
-
-        public String getRoleNAme(){
-            return role.getName();
-        }
-
-        public void introduction() {
-            String massage = "Your role is: " + PURPLE + this.role.getName() + RESET + "\n";
-
-            if (role instanceof Mayor){
-                for (Player h: actives) {
-                    if (h.role instanceof CityDoctor) {
-                        massage += "Doctor of City is " + h.getUserName() + "\n";
-                        sendToClient(massage);
-                        return;
-                    }
-                }
-            }
-
-            if (!(role instanceof Mafia)) {
-                sendToClient(massage);
-                return;
-            }
-
-            StringBuilder massageBuilder = new StringBuilder(massage);
-            for (Player h: actives) {
-                if (h.role instanceof Mafia && !h.equals(this)){
-                    massageBuilder.append(h.getUserName()).append(" is ").append(h.role.getName()).append("\n");
-                }
-            }
-
-            massage = massageBuilder.toString();
-            sendToClient(massage);
-
-
-        }
-
-        public void joinChat() {
-
-            if(isSilent){
-                isSilent = false;
-            }
-            else {
-                isInChat = true;
-                System.out.println(getUserName() + " Joined Chat.");
-                sendToClient("TALK!");
-                sendToClient("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
-            }
-
-        }
-
-        public void notifyOthers(String massage){
-            for (Player h: actives){
-                if (!h.equals(this)){
-                    h.sendToClient(massage);
-
-                }
-            }
-        }
-
-
-        public void sendToClient(String playerListens){
-            try {
-                out.writeUTF(playerListens);
-            }
-            catch (SocketException e){
-                System.out.println(name + " disconnected.");
-                actives.remove(this);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-        public void vote() throws IOException {
-
-            isAskedWho = true;
-
-            sendToClient("TALK!");
-
-            StringBuilder massage = new StringBuilder("Who do you vote? (Enter number)\n");
-
-
-            for (int index = 0; index < actives.size(); index++) {
-                if (!actives.get(index).equals(this)){
-                    massage.append(index).append(". ").append(actives.get(index).getUserName()).append("\n");
-                }
-            }
-            sendToClient(massage.toString());
-
-        }
-
-        public Player act() {
-
-            isAskedWho = true;
-
-            sendToClient("TALK!");
-
-            StringBuilder massage = new StringBuilder(role.actQuestion() + "\n");
-
-
-            for (int index = 0; index < actives.size(); index++) {
-                if (!actives.get(index).equals(this)){
-                    massage.append(index).append(". ").append(actives.get(index).getUserName()).append("\n");
-                }
-            }
-            sendToClient(massage.toString());
-
-            if (!answerOfWho.equals(null)) {
-                answerOfWho.addVote();
-                answerOfWho = null;
-            }
-
-            return answerOfWho;
-
-
-        }
-    }
-
-    private boolean chatroomIsEmpty() {
-        for (Player p: actives) {
-            if (p.isInChat){
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public boolean nameIsUsed(String name) {
-        for (Player p: actives){
-            if (p.getUserName().equals(name)){
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    public void notifyActives(String sayToPlayers) {
-
-        for (Player p: actives) {
+        for (Player p: watchers) {
 
             p.sendToClient(sayToPlayers);
 
@@ -490,13 +197,12 @@ public class God {
         Thread.sleep(10000);
 
         for (Player p: actives) {
-
-            if (p.answerOfWho != null) {
-                p.answerOfWho.addVote();
-                p.answerOfWho = null;
+            Player target =p.getAnswerOfWho();
+            if (target != null) {
+                target.addVote();
+                p.notifyOthers(p.getUserName() + " voted to: " +
+                        PURPLE + p.getAnswerOfWho().getUserName() + RESET);
             }
-            p.isAskedWho = false;
-
         }
 
         Player toDie = null;
@@ -532,10 +238,43 @@ public class God {
 
     }
 
+    public void notifyActives(String sayToPlayers) {
+
+        for (Player p : actives) {
+
+            p.sendToClient(sayToPlayers);
+
+        }
+
+    }
+
+    public boolean chatroomIsEmpty() {
+        for (Player p: actives) {
+            if (p.isInChat()){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean nameIsUsed(String name) {
+        for (Player p: actives){
+            if (p.getUserName().equals(name)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String getUserName(int index){
+        return actives.get(index).getUserName();
+    }
+
     private void kill(Player toDie) {
 
         actives.remove(toDie);
-        notifyActives(PURPLE + toDie.name + RESET + " Died!");
+        notifyActives(PURPLE + toDie.getUserName() + RESET + " Died!");
 
         toDie.sendToClient("You're Dead!\nDo You Wanna Watch Game? [yes, no]");
 
@@ -590,60 +329,51 @@ public class God {
         return false;
     }
 
-    public void turnNight() {
+    public void turnNight() throws InterruptedException {
+
         Player killed = null;
         Player lectorSaved = null;
         Player cityDrSaved = null;
         Player silent = null;
         Player sniped = null;
+        Player onDetect = null;
+
+
+        for (Player p: actives){
+            p.act();
+        }
+
+
+        Thread.sleep(10000);
 
 
         for (Player p: actives){
             switch (p.getRoleNAme()){
                 case "GodFather":
-                    killed = p.act();
+                    killed = p.getAnswerOfWho();
                     break;
 
                 case "Doctor Lector":
-                    lectorSaved = p.act();
+                    lectorSaved = p.getAnswerOfWho();
                     break;
 
-                case "Simple Mafia":
-                    p.act();
-
                 case "City Doctor":
-                    cityDrSaved = p.act();
+                    cityDrSaved = p.getAnswerOfWho();
                     break;
 
                 case "Psychic":
-                    silent = p.act();
+                    silent = p.getAnswerOfWho();
                     break;
 
                 case "Sniper":
-                    sniped = p.act();
+                    sniped = p.getAnswerOfWho();
                     if (sniped.role instanceof Citizen){
                         kill(p);
                     }
                     break;
 
                 case "Detective":
-                    Player onDetect = p.act();
-                    if (onDetect.role instanceof GodFather){
-                        if (((GodFather) onDetect.role).hasBeenDetectedBefore){
-                            p.sendToClient(": Mafia");
-                        }
-                        else {
-                            ((GodFather) onDetect.role).hasBeenDetectedBefore = false;
-                        }
-                    }
-                    else {
-                        if (p.role instanceof Mafia){
-                            p.sendToClient(": Mafia");
-                        }
-                        else {
-                            p.sendToClient(": Citizen");
-                        }
-                    }
+                    onDetect = p.getAnswerOfWho();
                     break;
 
                 default:
@@ -671,15 +401,38 @@ public class God {
             kill(sniped);
         }
 
-        if (silent != null) {
-            mute(silent);
+        if (silent != null){
+            silent.mute();
+        }
+
+        if (onDetect != null) {
+            detectionResult(onDetect);
         }
 
     }
 
-    private void mute(Player silent) {
-        silent.isSilent = true;
+    private void detectionResult(Player onDetect) {
+        for (Player p: actives) {
+            if (p.role instanceof Detective) {
+                if (onDetect.role instanceof GodFather) {
+                    if (((GodFather) onDetect.role).hasBeenDetectedBefore) {
+                        p.sendToClient(": Mafia");
+                    } else {
+                        ((GodFather) onDetect.role).hasBeenDetectedBefore = false;
+                    }
+                } else {
+                    if (onDetect.role instanceof Mafia) {
+                        p.sendToClient(": Mafia");
+                    } else {
+                        p.sendToClient(": Citizen");
+                    }
+                }
+                return;
+            }
+
+        }
     }
+
 
     public boolean gameIsOver() {
 
@@ -719,12 +472,60 @@ public class God {
     private void displayFinalResult(boolean mafiaWon) {
 
         if (mafiaWon){
-            System.out.println();
+            System.out.println("Mafia Won.");
         }
         else {
-            System.out.println();
+            System.out.println("City Won.");
         }
 
+    }
+
+    public void send(Player from, String massage) {
+        for (Player p: actives){
+            if (!p.equals(from)){
+                p.sendToClient(massage);
+            }
+        }
+
+        for (Player p: watchers){
+            p.sendToClient(massage);
+        }
+    }
+
+    public int nActives(){
+        return actives.size();
+    }
+
+    public String getMafiaList(Player requester) {
+        if (requester.role instanceof Citizen){
+            return "Access Denied.";
+        }
+        else {
+            StringBuilder massageBuilder = new StringBuilder();
+            for (Player p: actives) {
+                if (p.role instanceof Mafia && !p.equals(this)){
+                    massageBuilder.append(p.getUserName()).append(" is ").append(p.role.getName()).append("\n");
+                }
+            }
+            return massageBuilder.toString();
+        }
+    }
+
+    public String whoIsCityDoctor(Player requester){
+        for (Player h: actives) {
+            if (h.role instanceof CityDoctor) {
+                return "Doctor of City is " + h.getUserName() + "\n";
+            }
+        }
+        return "No Doctor";
+    }
+
+    public void addPlayer(Player player) {
+        actives.add(player);
+    }
+
+    public void removePlayer(Player player) {
+        actives.remove(player);
     }
 }
 
