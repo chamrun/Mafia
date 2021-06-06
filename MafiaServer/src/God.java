@@ -22,7 +22,7 @@ public class God {
     ArrayList<Player> actives = new ArrayList<>();
     ArrayList<Player> watchers = new ArrayList<>();
 
-    boolean isChatOn = false;
+    boolean waiting = false;
 
 
     public void addActive(ServerSocket server){
@@ -48,7 +48,7 @@ public class God {
 
     }
 
-    public void notifyWatchers(String sayToPlayers) {
+    private void notifyWatchers(String sayToPlayers) {
 
         for (Player p: watchers) {
 
@@ -72,7 +72,7 @@ public class God {
     }
 
 
-    public ArrayList<Role> importantRoles() {
+    private ArrayList<Role> importantRoles() {
         int nRoles = actives.size();
 
         ArrayList<Role> roles = new ArrayList<>();
@@ -159,11 +159,8 @@ public class God {
 
     }
 
-    public void turnDay() throws InterruptedException {
-
-        isChatOn = true;
-
-        System.out.println("Day started.");
+    public void startChatroom() throws InterruptedException {
+        waiting = true;
 
         for (Player p: actives) {
 
@@ -172,7 +169,7 @@ public class God {
         }
 
         synchronized(this) {
-            while(isChatOn) {
+            while(waiting) {
                 System.out.println("Waiting for chat to end...");
                 wait();
             }
@@ -182,8 +179,17 @@ public class God {
 
     }
 
-    public void election() throws InterruptedException {
+    public void stopWaiting() {
 
+        synchronized(God.this) {
+            waiting = false;
+            God.this.notify();
+        }
+
+    }
+
+    public void election() throws InterruptedException {
+        waiting = true;
 
         for (Player p: actives) {
 
@@ -195,14 +201,24 @@ public class God {
             }
         }
 
-        Thread.sleep(10000);
+        synchronized(this) {
+            while(waiting) {
+                System.out.println("Waiting for Voting to end...");
+                wait();
+            }
+
+            System.out.println("Election is done.");
+        }
 
         for (Player p: actives) {
-            Player target = actives.get(p.getAnswerOfWho());
-            if (target != null) {
+            if (p.getAnswerOfWho() != -1) {
+                System.out.println(p.getAnswerOfWho() != -1);
+                System.out.println("v:" + p.getAnswerOfWho());
+
+                Player target = actives.get(p.getAnswerOfWho());
                 target.addVote();
-                p.notifyOthers(p.getUserName() + " voted to: " +
-                        PURPLE + target.getUserName() + RESET);
+                p.notifyOthers(p.getUserName() + " voted to: " + PURPLE + target.getUserName() + RESET);
+
             }
         }
 
@@ -249,9 +265,10 @@ public class God {
 
     }
 
-    public boolean chatroomIsEmpty() {
+    public boolean nobodyIsBusy() {
+
         for (Player p: actives) {
-            if (p.isInChat()){
+            if (p.isBusy()){
                 return false;
             }
         }
@@ -272,7 +289,7 @@ public class God {
         return actives.get(index).getUserName();
     }
 
-    public Player getPlayer(String role){
+    private Player getPlayer(String role){
 
         for (Player p: actives) {
             if (p.role.getName().equals(role)) {
@@ -311,7 +328,7 @@ public class God {
 
     private boolean saysYes(Player player){
 
-        player.isAskedYes = true;
+        player.isBusy = true;
         player.sendToClient("TALK!");
 
         try {
@@ -428,6 +445,10 @@ public class God {
     private void detectionResult(Player onDetect) {
 
         Player detective = getPlayer("Detective");
+
+        if (detective == null){
+            return;
+        }
 
         if (onDetect.role instanceof GodFather) {
             if (((GodFather) onDetect.role).hasBeenDetectedBefore) {
@@ -546,5 +567,7 @@ public class God {
     public void removePlayer(Player player) {
         actives.remove(player);
     }
+
+
 }
 

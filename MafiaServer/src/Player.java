@@ -14,11 +14,12 @@ public class Player extends Thread {
     private String name;
     public Role role;
 
-    private boolean isInChat = false;
-    public boolean isAskedYes = false;
+
+
+    public boolean isBusy = false;
+
     private boolean isSilent = false;
 
-    private boolean isAskedWho = false;
     private int answerOfWho = -1;
 
     private int nVotes = 0;
@@ -27,11 +28,16 @@ public class Player extends Thread {
     DataOutputStream out;
     Socket socket;
 
+    ChatHandler chatHandler;
+
+
     public Player(God god, DataInputStream in, DataOutputStream out, Socket socket) {
         this.god = god;
         this.in = in;
         this.out = out;
         this.socket = socket;
+
+        chatHandler = new ChatHandler(god, this, socket, in, out);
     }
 
     public void addVote(){
@@ -46,12 +52,12 @@ public class Player extends Thread {
         return nVotes;
     }
 
-    public boolean isInChat() {
-        return isInChat;
+    public boolean isBusy() {
+        return isBusy;
     }
 
     public int getAnswerOfWho() {
-        isAskedWho = false;
+        isBusy = false;
         int temp = answerOfWho;
         answerOfWho = -1;
         return temp;
@@ -75,72 +81,15 @@ public class Player extends Thread {
             god.notifyActives((god.nActives() + 1) + " actives.");
             god.addPlayer(this);
 
+            /*
             while (true) {
 
                 long start = System.currentTimeMillis();
                 long end = start + 20000;
 
-                while (isInChat) {
-
-                    String clientSays = in.readUTF();
-
-                    if (clientSays.equals("OVER")) {
-                        sendToClient(PURPLE + "You left chatroom.\n" + RESET);
-                        notifyOthers(PURPLE + name + RESET + " left chatroom.");
-                        isInChat = false;
-
-                        if (god.chatroomIsEmpty()){
-                            System.out.println("Chatroom is empty.");
-                            synchronized(Player.this) {
-                                god.isChatOn = false;
-                                Player.this.notify();
-                            }
-                            notifyOthers("Chat is done.");
-                        }
-
-                        break;
-                    }
-
-                    if (System.currentTimeMillis() < end) {
-                        notifyOthers(PURPLE + name + ": " + RESET + clientSays);
-                    }
-                    else {
-                        sendToClient(PURPLE + "ChatTime is up.\n" + RESET);
-                        isInChat = false;
-
-                        synchronized(Player.this) {
-                            god.isChatOn = false;
-                            Player.this.notify();
-                        }
-
-                        break;
-                    }
-                }
-
                 if (isAskedWho) {
 
-                    out.writeUTF("Index: ");
-                    try {
-                        int index = Integer.parseInt(in.readUTF());
 
-                        while (index < 0 || god.nActives() <= index){
-                            //Some
-
-                            out.writeUTF("NOT VALID! Try Again: ");
-                            index = Integer.parseInt(in.readUTF());
-                        }
-
-                        if (isAskedWho) {
-                            answerOfWho = index;
-                        }
-                        else {
-                            out.writeUTF("Unfortunately you're late and your vote wasn't counted.");
-                        }
-
-                    }
-                    catch (NumberFormatException e) {
-                        System.out.println();
-                    }
 
                 }
 
@@ -158,13 +107,15 @@ public class Player extends Thread {
             }
 
 
+             */
+
 
         }
         catch (SocketException e){
             System.out.println(name + " disconnected.");
             god.removePlayer(this);
         }
-        catch (IOException | InterruptedException e) {
+        catch (IOException e /*| InterruptedException e*/) {
             e.printStackTrace();
         }
     }
@@ -193,63 +144,38 @@ public class Player extends Thread {
 
         sendToClient(massage + god.getMafiaList(this));
 
-
     }
 
     public void joinChat() {
 
-        if(isSilent){
+        if (isSilent) {
             isSilent = false;
         }
         else {
-            isInChat = true;
+            isBusy = true;
             System.out.println(getUserName() + " Joined Chat.");
-            sendToClient("TALK!");
-            sendToClient("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
-        }
 
-    }
-
-    public void notifyOthers(String massage){
-        god.send(this, massage);
-    }
-
-
-    public void sendToClient(String playerListens){
-        try {
-            out.writeUTF(playerListens);
-        }
-        catch (SocketException e){
-            System.out.println(name + " disconnected.");
-            god.removePlayer(this);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
+            chatHandler.start();
         }
     }
 
 
-    public void vote() throws IOException {
+    public int vote() throws IOException {
 
-        isAskedWho = true;
+        isBusy = true;
 
-        sendToClient("TALK!");
+        AskingWhoHandler askingWhoHandler = new AskingWhoHandler(god, this, socket, in, out, "VOTE");
+        askingWhoHandler.start();
 
-        StringBuilder massage = new StringBuilder("Who do you vote? (Enter number)\n");
-
-
-        for (int index = 0; index < god.nActives(); index++) {
-            massage.append(index).append(". ").append(god.getUserName(index)).append("\n");
-        }
-        sendToClient(massage.toString());
+        return answerOfWho;
 
     }
 
     public int act() {
 
-        isAskedWho = true;
+        isBusy = true;
 
-        sendToClient("TALK!");
+        //sendToClient("TALK!");
 
         StringBuilder massage = new StringBuilder(role.actQuestion() + "\n");
 
@@ -272,7 +198,35 @@ public class Player extends Thread {
 
     }
 
+    public void notifyOthers(String massage){
+        god.send(this, massage);
+    }
+
+
+    public void sendToClient(String playerListens){
+
+        try {
+            out.writeUTF(playerListens);
+        }
+        catch (SocketException e){
+            System.out.println(name + " disconnected.");
+            god.removePlayer(this);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public void mute() {
         isSilent = true;
+    }
+
+    public void endVote(int answer) {
+        answerOfWho = answer;
+        isBusy = false;
+        if (god.nobodyIsBusy()){
+            god.stopWaiting();
+        }
     }
 }

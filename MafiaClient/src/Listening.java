@@ -19,14 +19,9 @@ public class Listening extends Thread{
     public void run() {
         while (true){
             try {
-                String serverSays = in.readUTF();
 
-                if (serverSays.equals("TALK!")){
-                    out.writeUTF("LISTEN!");
-                }
-                else {
-                    System.out.println(serverSays);
-                }
+                String serverSays = in.readUTF();
+                System.out.println(serverSays);
 
             }
             catch (SocketException e){
