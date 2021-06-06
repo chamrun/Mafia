@@ -1,5 +1,5 @@
 interface Role {
-    void act();
+    String actQuestion();
     String getName();
 
 }
@@ -10,9 +10,11 @@ abstract class Mafia implements Role {
 
 class GodFather extends Mafia{
 
-    @Override
-    public void act() {
+    boolean hasBeenDetectedBefore = false;
 
+    @Override
+    public String actQuestion() {
+        return "Who do you wanna kill?";
     }
 
     @Override
@@ -24,8 +26,8 @@ class GodFather extends Mafia{
 class DoctorLector extends Mafia{
 
     @Override
-    public void act() {
-        // healing Someone
+    public String actQuestion() {
+        return "Which Mafia, Do you wanna save, from sniperShot?";
     }
 
     @Override
@@ -37,8 +39,8 @@ class DoctorLector extends Mafia{
 class SimpleMafia extends Mafia{
 
     @Override
-    public void act() {
-        // healing Someone
+    public String actQuestion() {
+        return "Who do you suggest to be killed by Godfather??";
     }
 
     @Override
@@ -54,8 +56,8 @@ abstract class Citizen implements Role{
 class CityDoctor extends Citizen{
 
     @Override
-    public void act() {
-
+    public String actQuestion() {
+        return "Who do you save from GodfatherShot?";
     }
 
     @Override
@@ -66,17 +68,9 @@ class CityDoctor extends Citizen{
 
 class Mayor extends Citizen{
 
-
-    public boolean cancelElection(){
-        if (true) {
-            return true;
-        }
-
-        else return false;
-    }
-
     @Override
-    public void act() {
+    public String actQuestion() {
+        return "Unreachable statement;";
     }
 
     @Override
@@ -88,7 +82,8 @@ class Mayor extends Citizen{
 class Detective extends Citizen{
 
     @Override
-    public void act() {
+    public String actQuestion() {
+        return "Whose role you want to know?";
     }
 
     @Override
@@ -102,7 +97,8 @@ class Psychic extends Citizen{
 
 
     @Override
-    public void act() {
+    public String actQuestion() {
+        return "Who do you wanna mute for a day?";
     }
 
     @Override
@@ -118,7 +114,8 @@ class Bulletproof extends Citizen{
 
 
     @Override
-    public void act() {
+    public String actQuestion() {
+        return "Do you wanna know how many Mafias and Citizens are in game? [yes, no]";
     }
 
     @Override
@@ -132,7 +129,8 @@ class Sniper extends Citizen{
     boolean hasBullet = true;
 
     @Override
-    public void act() {
+    public String actQuestion() {
+        return "Who do you wanna kill?";
     }
 
     @Override
@@ -145,7 +143,8 @@ class SimpleCitizen extends Citizen{
 
 
     @Override
-    public void act() {
+    public String actQuestion() {
+        return "Unreachable statement;";
     }
 
     @Override

@@ -56,10 +56,11 @@ public class God {
         public Role role;
 
         private boolean isInChat = false;
-        private boolean isVoteTime = false;
-        public boolean isAskingYes = false;
-        private boolean isNightActing = false;
+        public boolean isAskedYes = false;
         private boolean isSilent = false;
+
+        private boolean isAskedWho = false;
+        private Player answerOfWho = null;
 
         private int nVotes = 0;
 
@@ -114,7 +115,7 @@ public class God {
 
                         if (clientSays.equals("OVER")) {
                             sendToClient(PURPLE + "You left chatroom.\n" + RESET);
-                            notifyOthers(PURPLE + name + " left chatroom." + RESET);
+                            notifyOthers(PURPLE + name + RESET + " left chatroom.");
                             isInChat = false;
 
                             if (chatroomIsEmpty()){
@@ -145,7 +146,7 @@ public class God {
                         }
                     }
 
-                    if (isVoteTime) {
+                    if (isAskedWho) {
 
                         out.writeUTF("Index: ");
                         try {
@@ -158,14 +159,15 @@ public class God {
                                 voteIndex = Integer.parseInt(in.readUTF());
                             }
 
-                            if (isVoteTime) {
-                                actives.get(voteIndex).addVote();
+                            if (isAskedWho) {
+                                answerOfWho = actives.get(voteIndex);
                                 notifyOthers(name + " voted to: " +
                                         PURPLE + actives.get(voteIndex).getUserName() + RESET);
                             }
                             else {
                                 out.writeUTF("Unfortunately you're late and your vote wasn't counted.");
                             }
+
                         }
                         catch (NumberFormatException e) {
                             System.out.println();
@@ -173,13 +175,9 @@ public class God {
 
                     }
 
-                    if (isAskingYes){
+                    if (isAskedYes){
                         out.writeUTF("You Have 30 seconds to answer...");
                         Thread.sleep(30000);
-                    }
-
-                    if (isNightActing){
-
                     }
 
                     while (true){
@@ -211,7 +209,7 @@ public class God {
         }
 
         public void introduction() {
-            String massage = "Your role is: " + this.role.getName() + "\n";
+            String massage = "Your role is: " + PURPLE + this.role.getName() + RESET + "\n";
 
             if (role instanceof Mayor){
                 for (Player h: actives) {
@@ -243,10 +241,15 @@ public class God {
 
         public void joinChat() {
 
-            isInChat = true;
-            System.out.println(getUserName() + " Joined Chat.");
-            sendToClient("TALK!");
-            sendToClient("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
+            if(isSilent){
+                isSilent = false;
+            }
+            else {
+                isInChat = true;
+                System.out.println(getUserName() + " Joined Chat.");
+                sendToClient("TALK!");
+                sendToClient("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
+            }
 
         }
 
@@ -276,7 +279,7 @@ public class God {
 
         public void vote() throws IOException {
 
-            isVoteTime = true;
+            isAskedWho = true;
 
             sendToClient("TALK!");
 
@@ -293,6 +296,29 @@ public class God {
         }
 
         public Player act() {
+
+            isAskedWho = true;
+
+            sendToClient("TALK!");
+
+            StringBuilder massage = new StringBuilder(role.actQuestion() + "\n");
+
+
+            for (int index = 0; index < actives.size(); index++) {
+                if (!actives.get(index).equals(this)){
+                    massage.append(index).append(". ").append(actives.get(index).getUserName()).append("\n");
+                }
+            }
+            sendToClient(massage.toString());
+
+            if (!answerOfWho.equals(null)) {
+                answerOfWho.addVote();
+                answerOfWho = null;
+            }
+
+            return answerOfWho;
+
+
         }
     }
 
@@ -464,7 +490,13 @@ public class God {
         Thread.sleep(10000);
 
         for (Player p: actives) {
-            p.isVoteTime = false;
+
+            if (p.answerOfWho != null) {
+                p.answerOfWho.addVote();
+                p.answerOfWho = null;
+            }
+            p.isAskedWho = false;
+
         }
 
         Player toDie = null;
@@ -525,7 +557,8 @@ public class God {
     }
 
     private boolean saysYes(Player player){
-        player.isAskingYes = true;
+
+        player.isAskedYes = true;
         player.sendToClient("TALK!");
 
         try {
@@ -556,8 +589,6 @@ public class God {
 
         return false;
     }
-
-
 
     public void turnNight() {
         Player killed = null;
@@ -595,6 +626,26 @@ public class God {
                     }
                     break;
 
+                case "Detective":
+                    Player onDetect = p.act();
+                    if (onDetect.role instanceof GodFather){
+                        if (((GodFather) onDetect.role).hasBeenDetectedBefore){
+                            p.sendToClient(": Mafia");
+                        }
+                        else {
+                            ((GodFather) onDetect.role).hasBeenDetectedBefore = false;
+                        }
+                    }
+                    else {
+                        if (p.role instanceof Mafia){
+                            p.sendToClient(": Mafia");
+                        }
+                        else {
+                            p.sendToClient(": Citizen");
+                        }
+                    }
+                    break;
+
                 default:
                     p.sendToClient("You Don't have to act now. /n" +
                             "just wait for the night to end and try to hold on :D");
@@ -602,7 +653,7 @@ public class God {
             }
         }
 
-        if (!killed.equals(cityDrSaved) && !killed.equals(null)){
+        if (killed != null && !killed.equals(cityDrSaved)){
             if (killed.role instanceof Bulletproof){
                 if (((Bulletproof)killed.role).isShot){
                     kill(killed);
@@ -616,16 +667,18 @@ public class God {
             }
         }
 
-        if (!sniped.equals(lectorSaved) && !sniped.equals(null)){
+        if (sniped != null && !sniped.equals(lectorSaved)){
             kill(sniped);
         }
 
-        mute(silent);
+        if (silent != null) {
+            mute(silent);
+        }
 
     }
 
     private void mute(Player silent) {
-        silent.
+        silent.isSilent = true;
     }
 
     public boolean gameIsOver() {
