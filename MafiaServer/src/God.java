@@ -358,6 +358,8 @@ public class God {
             }
         }
 
+
+        waiting = true;
         synchronized(this) {
             while(waiting) {
                 System.out.println("Waiting for Night to end...");
@@ -388,14 +390,14 @@ public class God {
                         break;
 
                     case "Detective":
-                        onDetect = actives.get(p.getAnswerOfWho());
+                        onDetect = actives.get(answer);
+                        if (onDetect != null) {
+                            detectionResult(onDetect);
+                        }
                         break;
 
                     case "Sniper":
                         sniped = actives.get(answer);
-                        if (sniped.role instanceof Citizen) {
-                            kill(p);
-                        }
                         break;
 
                     default:
@@ -419,17 +421,21 @@ public class God {
             }
         }
 
-        if (sniped != null && !sniped.equals(lectorSaved)){
-            kill(sniped);
+
+        if (sniped != null){
+
+            if (sniped.role instanceof Citizen) {
+                kill(getPlayer("Sniper"));
+            }
+            else if (!sniped.equals(lectorSaved)){
+                kill(sniped);
+            }
         }
 
         if (silent != null){
             silent.mute();
         }
 
-        if (onDetect != null) {
-            detectionResult(onDetect);
-        }
         if (inquiry){
             int nMafia = 0;
             int nCitizen = 0;
@@ -450,6 +456,7 @@ public class God {
     }
 
     private void detectionResult(Player onDetect) {
+        System.out.println("Detecting on " + onDetect.getUserName() + "...");
 
         Player detective = getPlayer("Detective");
 
@@ -459,7 +466,7 @@ public class God {
 
         if (onDetect.role instanceof GodFather) {
             if (((GodFather) onDetect.role).hasBeenDetectedBefore) {
-                detective.sendToClient(": Mafia");
+                detective.sendToClient(onDetect.getUserName() + " is Mafia");
             }
             else {
                 ((GodFather) onDetect.role).hasBeenDetectedBefore = false;

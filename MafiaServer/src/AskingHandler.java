@@ -43,9 +43,10 @@ public class AskingHandler extends Thread {
 
                     for (int i = 0; i < god.nActives(); i++) {
                         if (!god.getUserName(i).equals(player.getUserName())) {
-                            massage.append(i).append(". ").append(god.getUserName(i)).append("\n\nindex: ");
+                            massage.append(i).append(". ").append(god.getUserName(i)).append("\n");
                         }
                     }
+                    massage.append("\nindex: ");
 
                     out.writeUTF(massage.toString());
 
@@ -73,9 +74,10 @@ public class AskingHandler extends Thread {
                     massage = new StringBuilder();
 
                     for (int i = 0; i < god.nActives(); i++) {
-                        massage.append(i).append(". ").append(god.getUserName(i)).append("\n\nindex: ");
+                        massage.append(i).append(". ").append(god.getUserName(i)).append("\n");
                     }
 
+                    massage.append("\nindex: ");
                     out.writeUTF(massage.toString());
 
                     indexOfAnswer = Integer.parseInt(in.readUTF());
@@ -118,7 +120,11 @@ public class AskingHandler extends Thread {
             }
 
 
-        } catch (SocketException e){
+        }
+        catch (NumberFormatException e){
+            System.out.println("invalid input.");
+        }
+        catch (SocketException e){
             System.out.println(player.getUserName() + " disconnected.");
             god.removePlayer(player);
 
@@ -130,7 +136,7 @@ public class AskingHandler extends Thread {
                 ioException.printStackTrace();
             }
 
-        } catch (NumberFormatException | IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

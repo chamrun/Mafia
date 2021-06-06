@@ -92,7 +92,7 @@ public class Player extends Thread {
     }
 
     public String getUserName() {
-        return name;
+        return PURPLE + name + RESET;
     }
 
     public String getRoleNAme(){
@@ -135,13 +135,14 @@ public class Player extends Thread {
 
         isBusy = true;
 
-        AskingHandler askingWhoHandler = new AskingHandler(god, this, socket, in, out, "VOTE");
+        AskingHandler askingWhoHandler = new AskingHandler(god, this, socket, in, out, "Vote");
         askingWhoHandler.start();
 
     }
 
     public void setAnswerOfWho(int answer) {
         answerOfWho = answer;
+        sendToClient("Got it.");
         isBusy = false;
         if (god.nobodyIsBusy()){
             god.stopWaiting();
