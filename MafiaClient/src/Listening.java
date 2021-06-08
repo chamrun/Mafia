@@ -26,6 +26,8 @@ public class Listening extends Thread{
             }
             catch (SocketException e){
                 System.out.println("God is disconnected :/ ...");
+                System.exit(-1);
+
                 return;
             }
             catch (IOException e) {

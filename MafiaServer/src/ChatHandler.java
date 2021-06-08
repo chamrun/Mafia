@@ -32,7 +32,7 @@ public class ChatHandler extends Thread{
             out.writeUTF("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
 
             long start = System.currentTimeMillis();
-            long end = start + 10000;
+            long end = start + 300000;
 
             while (true) {
                 String clientSays = in.readUTF();
@@ -49,7 +49,7 @@ public class ChatHandler extends Thread{
                     player.isBusy = false;
 
                     if (god.nobodyIsBusy()) {
-                        god.notifyEverybody("Chatroom is empty.");
+                        god.notifyEverybody("Chatroom is empty.\n");
                         god.stopWaiting();
                     }
 

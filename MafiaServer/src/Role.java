@@ -10,7 +10,15 @@ abstract class Mafia implements Role {
 
 class GodFather extends Mafia{
 
-    boolean hasBeenDetectedBefore = false;
+    private boolean detectedBefore = false;
+
+    public boolean hasBeenDetectedBefore(){
+        return detectedBefore;
+    }
+
+    public void detect(){
+        detectedBefore = true;
+    }
 
     @Override
     public String actQuestion() {
@@ -54,6 +62,16 @@ abstract class Citizen implements Role{
 }
 
 class CityDoctor extends Citizen{
+
+    private boolean savedCityDrBefore = false;
+
+    public boolean hasSavedCityDrBefore() {
+        return savedCityDrBefore;
+    }
+
+    public void saveCityDr(){
+        savedCityDrBefore = true;
+    }
 
     @Override
     public String actQuestion() {
@@ -110,8 +128,28 @@ class Psychic extends Citizen{
 
 class Bulletproof extends Citizen{
 
-    boolean isShot = false;
-    int nInquiry = 2;
+    private boolean shot = false;
+    private int nInquiry = 2;
+
+    public boolean isShot() {
+        return shot;
+    }
+
+    public void shot(){
+        shot = true;
+    }
+
+    public void inquiry(){
+        nInquiry--;
+    }
+
+    public boolean canInquiry(){
+        if (0 < nInquiry){
+            return true;
+        }
+
+        return false;
+    }
 
     @Override
     public String actQuestion() {

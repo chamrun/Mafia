@@ -34,16 +34,16 @@ public class Main {
         Thread.sleep(500);
         System.out.println("\nAll Players are connected.\n");
 
-        int nUnready = nOfAllPlayers - god.actives.size();
+        int nUnready = nOfAllPlayers - god.nActives();
 
         while (nUnready != 0){
             System.out.println(nUnready + " Player(s) is (are) not registered yet.");
             Thread.sleep(5000);
-            nUnready = nOfAllPlayers - god.actives.size();
+            nUnready = nOfAllPlayers - god.nActives();
         }
 
         god.setRandomRoles();
-        System.out.println("Roles Are Set.");//nPress Enter to start Game!");
+        System.out.println("Roles Are Set.");// Press Enter to start Game!");
 
         god.turnFirstNight();
 

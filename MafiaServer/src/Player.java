@@ -3,6 +3,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ConcurrentModificationException;
 
 public class Player extends Thread {
 
@@ -29,6 +30,7 @@ public class Player extends Thread {
     Socket socket;
 
     ChatHandler chatHandler;
+    AskingHandler askingWhoHandler;
 
 
     public Player(God god, DataInputStream in, DataOutputStream out, Socket socket) {
@@ -36,8 +38,6 @@ public class Player extends Thread {
         this.in = in;
         this.out = out;
         this.socket = socket;
-
-        chatHandler = new ChatHandler(god, this, socket, in, out);
     }
 
     public void addVote(){
@@ -77,14 +77,17 @@ public class Player extends Thread {
 
             out.writeUTF("GoodName");
 
-            System.out.println(name + " registered.\n");
+            System.out.println(getUserName() + " registered.\n");
             god.notifyEverybody((god.nActives() + 1) + " actives.");
             god.addPlayer(this);
 
         }
         catch (SocketException e){
-            System.out.println(name + " disconnected.");
+            System.out.println(getUserName() + " disconnected.");
             god.removePlayer(this);
+        }
+        catch (ConcurrentModificationException e){
+            System.out.println("Player couldn't register successfully.");
         }
         catch (IOException e /*| InterruptedException e*/) {
             e.printStackTrace();
@@ -93,6 +96,10 @@ public class Player extends Thread {
 
     public String getUserName() {
         return PURPLE + name + RESET;
+    }
+
+    public String compareNames(){
+        return name;
     }
 
     public String getRoleNAme(){
@@ -126,6 +133,7 @@ public class Player extends Thread {
             isBusy = true;
             System.out.println(getUserName() + " Joined Chat.");
 
+            chatHandler = new ChatHandler(god, this, socket, in, out);
             chatHandler.start();
         }
     }
@@ -135,8 +143,17 @@ public class Player extends Thread {
 
         isBusy = true;
 
-        AskingHandler askingWhoHandler = new AskingHandler(god, this, socket, in, out, "Vote");
+        askingWhoHandler = new AskingHandler(god, this, socket, in, out, "Vote");
         askingWhoHandler.start();
+
+    }
+
+    public void endVoting(){
+
+        if (askingWhoHandler != null) {
+            askingWhoHandler.interrupt();
+        }
+        isBusy = false;
 
     }
 
@@ -150,15 +167,27 @@ public class Player extends Thread {
     }
 
     public boolean askYesOrNo(String question){
-        sendToClient(question + "[yes, no]");
+        sendToClient(question + "[yes, no]\nYou have 10 seconds to answer...");
 
         isBusy = true;
 
         AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "YesOrNo");
         askingHandler.start();
 
-        // Should We Wait Here?
 
+        synchronized(this) {
+            while(isBusy) {
+                System.out.println("Waiting for " + getUserName() + " to YesOrNo...");
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+        System.out.println(getUserName() + " says: " + answerIsYes);
         return answerIsYes;
 
     }
@@ -166,25 +195,28 @@ public class Player extends Thread {
     boolean answerIsYes;
 
     public void endYesOrNo(boolean answerIsYes) {
-        System.out.println("answerIsYes: " + answerIsYes);
+
+        synchronized(Player.this) {
+            isBusy = false;
+            Player.this.notify();
+        }
+
         this.answerIsYes = answerIsYes;
         isBusy = false;
     }
 
     public void nightAct() {
+        isBusy = true;
 
         if (this.role.actQuestion() == null){
             sendToClient("Just wait and try to hold on :D");
             return;
         }
 
-        isBusy = true;
-
         sendToClient(role.actQuestion());
 
         AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "Night");
         askingHandler.start();
-
 
     }
 
@@ -199,7 +231,7 @@ public class Player extends Thread {
             out.writeUTF(playerListens);
         }
         catch (SocketException e){
-            System.out.println(name + " disconnected.");
+            System.out.println(getUserName() + " disconnected.");
             god.removePlayer(this);
         }
         catch (IOException e) {
@@ -212,5 +244,26 @@ public class Player extends Thread {
         isSilent = true;
     }
 
+    public void suggestWatching() {
 
+        sendToClient("You're Dead!\nDo You Wanna Watch Game? [yes, no]");
+
+        isBusy = true;
+
+        AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "Watch");
+        askingHandler.start();
+
+    }
+
+    public void end() {
+        sendToClient("GoodBye!");
+        try {
+            in.close();
+            out.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 }

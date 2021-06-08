@@ -19,8 +19,8 @@ public class God {
     public static final String COLOR = "\u001B[33m" + "\u001B[40m";
      */
 
-    ArrayList<Player> actives = new ArrayList<>();
-    ArrayList<Player> watchers = new ArrayList<>();
+    private ArrayList<Player> actives = new ArrayList<>();
+    private ArrayList<Player> watchers = new ArrayList<>();
 
     boolean waiting = false;
 
@@ -165,7 +165,6 @@ public class God {
                 System.out.println("Waiting for chat to end...");
                 wait();
             }
-
             System.out.println("Chat is done.");
         }
 
@@ -178,6 +177,9 @@ public class God {
             God.this.notify();
         }
 
+        for (Player p: actives){
+            p.endVoting();
+        }
     }
 
     public void election() throws InterruptedException {
@@ -199,6 +201,7 @@ public class God {
                 wait();
             }
             System.out.println("Election is done.");
+            notifyEverybody("Election is done.");
         }
 
         for (Player p: actives) {
@@ -236,11 +239,12 @@ public class God {
 
         if (toDie == null){
             System.out.println("No one has enough vote.");
+            notifyEverybody("No one has enough vote.\n");
             return;
         }
 
         if (mayorCancels()) {
-            notifyEverybody("Mayor canceled election.");
+            notifyEverybody("Mayor canceled election.\n");
             System.out.println("Mayor canceled election.");
             return;
         }
@@ -252,6 +256,13 @@ public class God {
 
         for (Player p: actives){
             p.resetVote();
+        }
+    }
+
+    public void endElection() {
+        stopWaiting();
+        for (Player p: actives){
+            p.endVoting();
         }
     }
 
@@ -294,7 +305,7 @@ public class God {
 
     public boolean nameIsUsed(String name) {
         for (Player p: actives){
-            if (p.getUserName().equals(name)){
+            if (p.compareNames().equals(name)){
                 return true;
             }
         }
@@ -319,11 +330,9 @@ public class God {
     private void kill(Player toDie) {
 
         actives.remove(toDie);
-        notifyEverybody(PURPLE + toDie.getUserName() + RESET + " Died!");
+        notifyEverybody(PURPLE + toDie.getUserName() + RESET + " Died!\n");
+        toDie.suggestWatching();
 
-        if (toDie.askYesOrNo("You're Dead!\nDo You Wanna Watch Game?")){
-            watchers.add(toDie);
-        }
     }
 
     private boolean mayorCancels(){
@@ -340,6 +349,7 @@ public class God {
     }
 
     public void turnNight() throws InterruptedException {
+        waiting = true;
 
         Player killed = null;
         Player lectorSaved = null;
@@ -354,25 +364,32 @@ public class God {
             p.nightAct();
 
             if (p.role instanceof Bulletproof){
-                inquiry = p.askYesOrNo("Do you want inquiry?");
+
+                if (((Bulletproof) p.role).canInquiry()){
+                    inquiry = p.askYesOrNo("Do you want inquiry?");
+                    if (inquiry){
+                        ((Bulletproof) p.role).inquiry();
+                    }
+                }
             }
         }
 
 
-        waiting = true;
+
         synchronized(this) {
             while(waiting) {
                 System.out.println("Waiting for Night to end...");
                 wait();
             }
             System.out.println("Night is done.");
+            notifyEverybody("Night is done.\n");
         }
 
         for (Player p: actives){
             int answer = p.getAnswerOfWho();
             if (answer != -1) {
 
-                switch (p.getRoleNAme()) {
+                    switch (p.getRoleNAme()) {
                     case "GodFather":
                         killed = actives.get(answer);
                         break;
@@ -407,13 +424,24 @@ public class God {
             }
         }
 
+        if (cityDrSaved!= null && cityDrSaved.role instanceof CityDoctor){
+            Player cityDr = getPlayer("City Doctor");
+            if (((CityDoctor)cityDr.role).hasSavedCityDrBefore()){
+                cityDrSaved = null;
+            }
+            else {
+                ((CityDoctor)cityDr.role).saveCityDr();
+            }
+        }
+
+
         if (killed != null && !killed.equals(cityDrSaved)){
             if (killed.role instanceof Bulletproof){
-                if (((Bulletproof)killed.role).isShot){
+                if (((Bulletproof)killed.role).isShot()){
                     kill(killed);
                 }
                 else {
-                    ((Bulletproof)killed.role).isShot = true;
+                    ((Bulletproof)killed.role).shot();
                 }
             }
             else {
@@ -465,19 +493,20 @@ public class God {
         }
 
         if (onDetect.role instanceof GodFather) {
-            if (((GodFather) onDetect.role).hasBeenDetectedBefore) {
-                detective.sendToClient(onDetect.getUserName() + " is Mafia");
+            if (((GodFather) onDetect.role).hasBeenDetectedBefore()) {
+                detective.sendToClient(onDetect.getUserName() + " is Mafia.");
             }
             else {
-                ((GodFather) onDetect.role).hasBeenDetectedBefore = false;
+                detective.sendToClient(onDetect.getUserName() + " is Citizen.");
+                ((GodFather) onDetect.role).detect();
             }
         }
         else {
             if (onDetect.role instanceof Mafia) {
-                detective.sendToClient(onDetect.getUserName() + " is Mafia");
+                detective.sendToClient(onDetect.getUserName() + " is Mafia.");
             }
             else {
-                detective.sendToClient(onDetect.getUserName() + " is Citizen");
+                detective.sendToClient(onDetect.getUserName() + " is Citizen.");
             }
         }
     }
@@ -571,9 +600,14 @@ public class God {
     }
 
     public void removePlayer(Player player) {
+        player.end();
         actives.remove(player);
     }
 
 
+    public void addWatcher(Player newWatcher) {
+        newWatcher.sendToClient("Watch and enjoy :D");
+        watchers.add(newWatcher);
+    }
 }
 

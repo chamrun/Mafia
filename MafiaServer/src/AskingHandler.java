@@ -34,7 +34,7 @@ public class AskingHandler extends Thread {
         try {
 
             long start = System.currentTimeMillis();
-            long end = start + 10000;
+            long end = start + 30000;
 
             switch (type){
                 case "Vote":
@@ -61,6 +61,7 @@ public class AskingHandler extends Thread {
 
                     if (end < System.currentTimeMillis()) {
                         out.writeUTF("Unfortunately you're late and your vote wasn't counted.");
+                        god.endElection();
                         god.stopWaiting();
                         return;
                     }
@@ -113,16 +114,38 @@ public class AskingHandler extends Thread {
 
                     break;
 
+                case "Watch":
+                    answer = in.readUTF();
+
+                    while (!(answer.equalsIgnoreCase("yes"))
+                            && !(answer.equalsIgnoreCase("no"))){
+
+                        player.sendToClient("Invalid! Write \"yes\" or \"no\".");
+                        answer = player.in.readUTF();
+
+                    }
+
+                    if (answer.equalsIgnoreCase("yes")) {
+                        god.addWatcher(player);
+                        return;
+                    }
+                    else if (answer.equalsIgnoreCase("no")){
+                        player.end();
+                        return;
+                    }
+
+                    break;
+
 
                 default:
-                    System.out.println("Undefined type :/");
+                    System.out.println("Undefined askingType.");
                     break;
             }
 
 
         }
         catch (NumberFormatException e){
-            System.out.println("invalid input.");
+            System.out.println("invalid input in askingHandler. Write a number. ");
         }
         catch (SocketException e){
             System.out.println(player.getUserName() + " disconnected.");
