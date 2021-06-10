@@ -3,20 +3,20 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AskingHandler extends Thread {
-    public static final String PURPLE = "\033[0;35m";
-    public static final String RESET = "\033[0m";
 
-    God god;
-    Player player;
+    private final God god;
+    private final Player player;
 
-    DataInputStream in;
-    DataOutputStream out;
-    Socket socket;
-    String type;
+    private DataInputStream in;
+    private final DataOutputStream out;
+    private final Socket socket;
+    private final String type;
 
-    int result;
+    int indexOfAnswer = -2;
 
     public AskingHandler(God god, Player player, Socket socket, DataInputStream in, DataOutputStream out, String type){
         this.god = god;
@@ -36,8 +36,22 @@ public class AskingHandler extends Thread {
             long start = System.currentTimeMillis();
             long end = start + 30000;
 
+
             switch (type){
                 case "Vote":
+
+                    (new Timer()).schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            if (indexOfAnswer == -2) {
+                                try {
+                                    out.writeUTF("Time's up");
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }, 31000);
 
                     StringBuilder massage = new StringBuilder("\nWho do you vote? (Enter number)\n-1: Nobody\n");
 
@@ -50,7 +64,7 @@ public class AskingHandler extends Thread {
 
                     out.writeUTF(massage.toString());
 
-                    int indexOfAnswer = Integer.parseInt(in.readUTF());
+                    indexOfAnswer = Integer.parseInt(in.readUTF());
 
                     while (indexOfAnswer < -1 || god.nActives() <= indexOfAnswer
                             || god.getUserName(indexOfAnswer).equals(player.getUserName())){
@@ -60,7 +74,7 @@ public class AskingHandler extends Thread {
                     }
 
                     if (end < System.currentTimeMillis()) {
-                        out.writeUTF("Unfortunately you're late and your vote wasn't counted.");
+                        out.writeUTF("Unfortunately you're late and you can't vote.");
                         god.endElection();
                         god.stopWaiting();
                         return;

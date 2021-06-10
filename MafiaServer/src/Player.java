@@ -7,22 +7,17 @@ import java.util.ConcurrentModificationException;
 
 public class Player extends Thread {
 
-    public static final String PURPLE = "\033[0;35m";
-    public static final String RESET = "\033[0m";
+    private static final String PURPLE = "\033[0;35m";
+    private static final String RESET = "\033[0m";
 
-    private God god;
+    private final God god;
 
     private String name;
     public Role role;
 
-
-
     public boolean isBusy = false;
-
     private boolean isSilent = false;
-
     private int answerOfWho = -1;
-
     private int nVotes = 0;
 
     DataInputStream in;
@@ -142,7 +137,6 @@ public class Player extends Thread {
     public void vote() throws IOException {
 
         isBusy = true;
-
         askingWhoHandler = new AskingHandler(god, this, socket, in, out, "Vote");
         askingWhoHandler.start();
 
@@ -152,22 +146,25 @@ public class Player extends Thread {
 
         if (askingWhoHandler != null) {
             askingWhoHandler.interrupt();
+            System.out.println("interrupting " + getUserName());
         }
         isBusy = false;
 
     }
 
     public void setAnswerOfWho(int answer) {
+
         answerOfWho = answer;
         sendToClient("Got it.");
         isBusy = false;
+
         if (god.nobodyIsBusy()){
             god.stopWaiting();
         }
     }
 
     public boolean askYesOrNo(String question){
-        sendToClient(question + "[yes, no]\nYou have 10 seconds to answer...");
+        sendToClient(question + "[yes, no]");
 
         isBusy = true;
 
@@ -237,6 +234,7 @@ public class Player extends Thread {
 
         AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "Night");
         askingHandler.start();
+        System.out.println("Starting nightHandler for " + getName());
 
     }
 

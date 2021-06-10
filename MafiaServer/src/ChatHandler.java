@@ -9,12 +9,12 @@ public class ChatHandler extends Thread{
     public static final String PURPLE = "\033[0;35m";
     public static final String RESET = "\033[0m";
 
-    God god;
-    Player player;
+    private final God god;
+    private final Player player;
 
-    DataInputStream in;
-    DataOutputStream out;
-    Socket socket;
+    private final DataInputStream in;
+    private final DataOutputStream out;
+    private final Socket socket;
 
     public ChatHandler(God god, Player player, Socket socket, DataInputStream in,  DataOutputStream out){
         this.god = god;
@@ -44,7 +44,7 @@ public class ChatHandler extends Thread{
                 }
 
                 if (clientSays.equals("OVER")) {
-                    out.writeUTF(PURPLE + "You left chatroom.\n" + RESET);
+                    out.writeUTF(PURPLE + "You" + RESET + " left chatroom.");
                     player.notifyOthers(PURPLE + player.getUserName() + RESET + " left chatroom.");
                     player.isBusy = false;
 

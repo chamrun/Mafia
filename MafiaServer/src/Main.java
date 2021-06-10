@@ -38,18 +38,18 @@ public class Main {
 
         int nUnready = nOfAllPlayers - god.nActives();
 
-        while (nUnready != 0){
+        while (nUnready != 0) {
             System.out.println(nUnready + " Player(s) is (are) not registered yet.");
-            Thread.sleep(5000);
+            Thread.sleep(4000);
             nUnready = nOfAllPlayers - god.nActives();
         }
 
         god.setRandomRoles();
-        System.out.println("Roles Are Set.");// Press Enter to start Game!");
+        System.out.println("Roles Are Set.");
 
         god.turnFirstNight();
 
-        while (god.gameIsNotOver()) {
+        while (!god.gameIsOver()) {
 
             System.out.println("Day...");
             god.startChatroom();
@@ -57,14 +57,11 @@ public class Main {
             System.out.println("Election...");
             god.election();
 
-            if (god.gameIsNotOver()) {
-                System.out.println("Night...");
-
-                god.turnNight();
-            }
-            else {
+            if (god.gameIsOver())
                 break;
-            }
+
+            System.out.println("Night...");
+            god.turnNight();
 
         }
 

@@ -144,11 +144,7 @@ class Bulletproof extends Citizen{
     }
 
     public boolean canInquiry(){
-        if (0 < nInquiry){
-            return true;
-        }
-
-        return false;
+        return 0 < nInquiry;
     }
 
     @Override
@@ -164,7 +160,15 @@ class Bulletproof extends Citizen{
 
 class Sniper extends Citizen{
 
-    boolean hasBullet = true;
+    private boolean hasBullet = true;
+
+    public boolean hasBullet(){
+        return hasBullet;
+    }
+
+    public void shot(){
+        hasBullet = false;
+    }
 
     @Override
     public String actQuestion() {

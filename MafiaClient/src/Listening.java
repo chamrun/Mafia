@@ -21,7 +21,11 @@ public class Listening extends Thread{
             try {
 
                 String serverSays = in.readUTF();
-                System.out.println(serverSays);
+
+                if (serverSays.equals("Time's up"))
+                    out.writeUTF("-1");
+                else
+                    System.out.println(serverSays);
 
             }
             catch (SocketException e){
