@@ -6,6 +6,8 @@ public class Main {
 
     private static final God god = new God();
 
+
+
     public static void main(String[] args) throws IOException, InterruptedException {
 
         Scanner sc = new Scanner(System.in);

@@ -153,7 +153,7 @@ class Bulletproof extends Citizen{
 
     @Override
     public String actQuestion() {
-        return "Do you wanna know how many Mafias and Citizens are in game? [yes, no]";
+        return "Do you wanna know how many Mafias and Citizens are in game?";
     }
 
     @Override

@@ -203,17 +203,37 @@ public class Player extends Thread {
 
         this.answerIsYes = answerIsYes;
         isBusy = false;
+
+
+
     }
 
+
+
     public void nightAct() {
-        isBusy = true;
+
+        if (role instanceof Bulletproof) {
+            if (((Bulletproof) role).canInquiry()) {
+                answerIsYes = askYesOrNo(role.actQuestion());
+                if (answerIsYes) {
+                    ((Bulletproof) role).inquiry();
+                }
+            }
+            if (god.nobodyIsBusy()) {
+                god.stopWaiting();
+            }
+            return;
+        }
+
 
         if (this.role.actQuestion() == null){
             sendToClient("Just wait and try to hold on :D");
             return;
         }
 
-        sendToClient(role.actQuestion());
+        isBusy = true;
+
+        sendToClient(role.actQuestion() + "\n-1: Nobody");
 
         AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "Night");
         askingHandler.start();
@@ -256,7 +276,6 @@ public class Player extends Thread {
     }
 
     public void end() {
-        sendToClient("GoodBye!");
         try {
             in.close();
             out.close();

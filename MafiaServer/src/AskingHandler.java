@@ -39,11 +39,11 @@ public class AskingHandler extends Thread {
             switch (type){
                 case "Vote":
 
-                    StringBuilder massage = new StringBuilder("Who do you vote? (Enter number)\n");
+                    StringBuilder massage = new StringBuilder("\nWho do you vote? (Enter number)\n-1: Nobody\n");
 
                     for (int i = 0; i < god.nActives(); i++) {
                         if (!god.getUserName(i).equals(player.getUserName())) {
-                            massage.append(i).append(". ").append(god.getUserName(i)).append("\n");
+                            massage.append(i).append(": ").append(god.getUserName(i)).append("\n");
                         }
                     }
                     massage.append("\nindex: ");
@@ -52,8 +52,8 @@ public class AskingHandler extends Thread {
 
                     int indexOfAnswer = Integer.parseInt(in.readUTF());
 
-                    while (indexOfAnswer < 0 || god.nActives() <= indexOfAnswer ||
-                            god.getUserName(indexOfAnswer).equals(player.getUserName())){
+                    while (indexOfAnswer < -1 || god.nActives() <= indexOfAnswer
+                            || god.getUserName(indexOfAnswer).equals(player.getUserName())){
 
                         out.writeUTF("NOT VALID! Try Again: ");
                         indexOfAnswer = Integer.parseInt(in.readUTF());
@@ -75,7 +75,7 @@ public class AskingHandler extends Thread {
                     massage = new StringBuilder();
 
                     for (int i = 0; i < god.nActives(); i++) {
-                        massage.append(i).append(". ").append(god.getUserName(i)).append("\n");
+                        massage.append(i).append(": ").append(god.getUserName(i)).append("\n");
                     }
 
                     massage.append("\nindex: ");
@@ -83,7 +83,7 @@ public class AskingHandler extends Thread {
 
                     indexOfAnswer = Integer.parseInt(in.readUTF());
 
-                    while (indexOfAnswer < 0 || god.nActives() <= indexOfAnswer){
+                    while (indexOfAnswer < -1 || god.nActives() <= indexOfAnswer){
                         out.writeUTF("NOT VALID! Try Again: ");
                         indexOfAnswer = Integer.parseInt(in.readUTF());
                     }
@@ -130,6 +130,7 @@ public class AskingHandler extends Thread {
                         return;
                     }
                     else if (answer.equalsIgnoreCase("no")){
+                        player.sendToClient("GoodBye!");
                         player.end();
                         return;
                     }
@@ -145,7 +146,8 @@ public class AskingHandler extends Thread {
 
         }
         catch (NumberFormatException e){
-            System.out.println("invalid input in askingHandler. Write a number. ");
+            System.out.println("invalid input in askingHandler. Needed number.");
+            player.setAnswerOfWho(-1);
         }
         catch (SocketException e){
             System.out.println(player.getUserName() + " disconnected.");

@@ -19,11 +19,17 @@ public class God {
     public static final String COLOR = "\u001B[33m" + "\u001B[40m";
      */
 
-    private ArrayList<Player> actives = new ArrayList<>();
-    private ArrayList<Player> watchers = new ArrayList<>();
+    private ArrayList<Player> actives;
+    private ArrayList<Player> watchers;
+    boolean waiting;
+    private StringBuilder listOfAllPlayers;
 
-    boolean waiting = false;
-
+    public God() {
+        actives = new ArrayList<>();
+        watchers = new ArrayList<>();
+        listOfAllPlayers = new StringBuilder();
+        waiting = false;
+    }
 
     public void addActive(ServerSocket server){
 
@@ -69,12 +75,7 @@ public class God {
 
         ArrayList<Role> roles = new ArrayList<>();
 
-        roles.add(new GodFather());
-        nRoles--;
-        if (nRoles == 0){
-            return roles;
-        }
-
+/*
         roles.add(new CityDoctor());
         nRoles--;
         if (nRoles == 0){
@@ -87,13 +88,13 @@ public class God {
             return roles;
         }
 
-        roles.add(new Sniper());
+        roles.add(new GodFather());
         nRoles--;
         if (nRoles == 0){
             return roles;
         }
 
-        roles.add(new DoctorLector());
+        roles.add(new Sniper());
         nRoles--;
         if (nRoles == 0){
             return roles;
@@ -105,19 +106,34 @@ public class God {
             return roles;
         }
 
+        roles.add(new DoctorLector());
+        nRoles--;
+        if (nRoles == 0){
+            return roles;
+        }
+
         roles.add(new Mayor());
         nRoles--;
         if (nRoles == 0){
             return roles;
         }
 
+ */
+
         roles.add(new Psychic());
         nRoles--;
         if (nRoles == 0){
             return roles;
         }
-
+/*
         roles.add(new SimpleMafia());
+        nRoles--;
+        if (nRoles == 0){
+            return roles;
+        }
+
+ */
+        roles.add(new GodFather());
         nRoles--;
         if (nRoles == 0){
             return roles;
@@ -147,7 +163,10 @@ public class God {
 
         for (Player p: actives){
             p.introduction();
+            listOfAllPlayers.append(p.getUserName()).append(" was ").append(p.role.getName()).append("\n");
         }
+
+
 
     }
 
@@ -237,6 +256,10 @@ public class God {
             }
         }
 
+        for (Player p: actives){
+            p.resetVote();
+        }
+
         if (toDie == null){
             System.out.println("No one has enough vote.");
             notifyEverybody("No one has enough vote.\n");
@@ -252,11 +275,6 @@ public class God {
         System.out.println("Gonna kill " + toDie.getUserName());
 
         kill(toDie);
-
-
-        for (Player p: actives){
-            p.resetVote();
-        }
     }
 
     public void endElection() {
@@ -304,6 +322,9 @@ public class God {
     }
 
     public boolean nameIsUsed(String name) {
+        if (name.equals("")){
+            return true;
+        }
         for (Player p: actives){
             if (p.compareNames().equals(name)){
                 return true;
@@ -313,6 +334,9 @@ public class God {
     }
 
     public String getUserName(int index){
+        if (index == -1){
+            return "";
+        }
         return actives.get(index).getUserName();
     }
 
@@ -325,6 +349,21 @@ public class God {
         }
 
         return null;
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+
+        ArrayList<Player> players = new ArrayList<>();
+
+        for (Player p: players){
+
+            p.sendToClient("Massage");
+
+            Thread.sleep(10000);
+
+        }
+
+
     }
 
     private void kill(Player toDie) {
@@ -361,18 +400,14 @@ public class God {
 
 
         for (Player p: actives){
+
             p.nightAct();
 
-            if (p.role instanceof Bulletproof){
-
-                if (((Bulletproof) p.role).canInquiry()){
-                    inquiry = p.askYesOrNo("Do you want inquiry?");
-                    if (inquiry){
-                        ((Bulletproof) p.role).inquiry();
-                    }
-                }
-            }
         }
+
+
+
+
 
 
 
@@ -382,7 +417,7 @@ public class God {
                 wait();
             }
             System.out.println("Night is done.");
-            notifyEverybody("Night is done.\n");
+            notifyEverybody("Night is done.");
         }
 
         for (Player p: actives){
@@ -406,6 +441,10 @@ public class God {
                         silent = actives.get(answer);
                         break;
 
+                    case "Sniper":
+                        sniped = actives.get(answer);
+                        break;
+
                     case "Detective":
                         onDetect = actives.get(answer);
                         if (onDetect != null) {
@@ -413,8 +452,8 @@ public class God {
                         }
                         break;
 
-                    case "Sniper":
-                        sniped = actives.get(answer);
+                    case "Bulletproof":
+                        inquiry = p.answerIsYes;
                         break;
 
                     default:
@@ -424,7 +463,7 @@ public class God {
             }
         }
 
-        if (cityDrSaved!= null && cityDrSaved.role instanceof CityDoctor){
+        if (cityDrSaved != null && cityDrSaved.role instanceof CityDoctor){
             Player cityDr = getPlayer("City Doctor");
             if (((CityDoctor)cityDr.role).hasSavedCityDrBefore()){
                 cityDrSaved = null;
@@ -462,6 +501,8 @@ public class God {
 
         if (silent != null){
             silent.mute();
+            notifyEverybody(silent.getUserName() + " is silent today =)", silent);
+            silent.sendToClient("You've been silenced last night! Wait till end of chat...");
         }
 
         if (inquiry){
@@ -514,13 +555,11 @@ public class God {
 
     public boolean gameIsNotOver() {
 
-        /*
-
         int nMafia = 0, nCitizen = 0;
 
-        for (Handler h: actives) {
+        for (Player p: actives) {
 
-            if (h.role instanceof Mafia){
+            if (p.role instanceof Mafia){
                 nMafia++;
             }
             else {
@@ -540,9 +579,6 @@ public class God {
             return false;
         }
 
-         */
-
-
         return true;
 
     }
@@ -551,10 +587,15 @@ public class God {
 
         if (mafiaWon){
             System.out.println("Mafia Won.");
+            notifyEverybody("Mafia won the city!");
         }
         else {
             System.out.println("City Won.");
+            notifyEverybody("Citizens are won!");
         }
+
+        System.out.println(listOfAllPlayers.toString());
+        notifyEverybody(listOfAllPlayers.toString());
 
     }
 
@@ -600,8 +641,8 @@ public class God {
     }
 
     public void removePlayer(Player player) {
-        player.end();
         actives.remove(player);
+        player.end();
     }
 
 

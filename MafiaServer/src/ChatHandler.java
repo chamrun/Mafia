@@ -29,7 +29,7 @@ public class ChatHandler extends Thread{
 
         try {
 
-            out.writeUTF("Day is Started! You Can chat for 5 minutes. Send OVER if you're done.");
+            out.writeUTF("\nDay is Started! You Can chat for 5 minutes. Send OVER if you're done.");
 
             long start = System.currentTimeMillis();
             long end = start + 300000;
