@@ -101,11 +101,13 @@ public class God {
             return roles;
         }
 
-        roles.add(new SimpleCitizen());
+ /*       roles.add(new SimpleCitizen());
         nRoles--;
         if (nRoles == 0){
             return roles;
         }
+
+
 
         roles.add(new DoctorLector());
         nRoles--;
@@ -120,12 +122,13 @@ public class God {
         }
 
 
-
         roles.add(new Psychic());
         nRoles--;
         if (nRoles == 0){
             return roles;
         }
+
+  */
 
         roles.add(new SimpleMafia());
         nRoles--;
@@ -169,9 +172,7 @@ public class God {
         waiting = true;
 
         for (Player p: actives) {
-
             p.joinChat();
-
         }
 
         synchronized(this) {
@@ -181,8 +182,9 @@ public class God {
             }
             System.out.println("Chat is done.");
         }
-
     }
+
+
 
     public void stopWaiting() {
 
@@ -268,13 +270,6 @@ public class God {
         kill(toDie);
     }
 
-    public void endElection() {
-        stopWaiting();
-        for (Player p: actives){
-            p.endVoting();
-        }
-    }
-
     public void turnNight() throws InterruptedException {
         waiting = true;
 
@@ -304,8 +299,10 @@ public class God {
             notifyEverybody("Night is done.");
         }
 
+
         for (Player p: actives){
             int answer = p.getAnswerOfWho();
+
             if (answer != -1) {
 
                     switch (p.getRoleNAme()) {
@@ -340,15 +337,25 @@ public class God {
                         break;
 
                     case "Bulletproof":
-                        inquiry = p.answerIsYes;
+                        System.out.println(p.getUserName() + "...");
+                        if (((Bulletproof) p.role).canInquiry()) {
+                            System.out.println("Yes:1:...");
+                            inquiry = p.answerIsYes;
+                            if (inquiry) {
+                                System.out.println("Yes:2:...");
+                                ((Bulletproof) p.role).inquiry();
+                            }
+                        }
+
                         break;
 
                     default:
-                        System.out.println("Unreachable statement in night.");
+                        System.out.println(p.getRoleNAme() + "Unreachable statement in night.");
                         break;
                 }
             }
         }
+        System.out.println("In: " + inquiry);
 
         if (cityDrSaved != null && cityDrSaved.role instanceof CityDoctor){
 
@@ -481,6 +488,7 @@ public class God {
 
         actives.remove(toDie);
         notifyEverybody(PURPLE + toDie.getUserName() + RESET + " Died!\n");
+        watchers.add(toDie);
         toDie.suggestWatching();
 
     }
@@ -561,11 +569,6 @@ public class God {
         return "Doctor of City is " + getPlayer("City Doctor") + "\n";
     }
 
-    public void addWatcher(Player newWatcher) {
-        newWatcher.sendToClient("Watch and enjoy :D");
-        watchers.add(newWatcher);
-    }
-
     public boolean gameIsOver() {
 
         int nMafia = 0, nCitizen = 0;
@@ -600,17 +603,52 @@ public class God {
 
         if (mafiaWon){
             System.out.println("Mafia Won.");
-            notifyEverybody("Mafia won the city!");
+            notifyEverybody("\nMafia won the city!");
         }
         else {
             System.out.println("City Won.");
-            notifyEverybody("Citizens are won!");
+            notifyEverybody("\nCitizens are won!");
         }
 
         System.out.println(listOfAllPlayers.toString());
         notifyEverybody(listOfAllPlayers.toString());
 
+        endGame();
     }
 
+    private void endGame() {
+        for (Player p: actives){
+            try {
+                p.in.close();
+                p.out.close();
+                p.socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (Player p: watchers){
+            try {
+                p.in.close();
+                p.out.close();
+                p.socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void suggestGodFather(int indexOfAnswer) {
+        if (indexOfAnswer == -1) {
+            return;
+        }
+
+        Player godFather = getPlayer("GodFather");
+        if (godFather == null){
+            return;
+        }
+
+        godFather.sendToClient("Simple mafia suggests you to kill " + actives.get(indexOfAnswer).getUserName());
+    }
 }
 

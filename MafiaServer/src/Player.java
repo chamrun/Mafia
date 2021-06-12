@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ConcurrentModificationException;
 
+
 public class Player extends Thread {
 
     private static final String PURPLE = "\033[0;35m";
@@ -27,6 +28,8 @@ public class Player extends Thread {
     ChatHandler chatHandler;
     AskingHandler askingWhoHandler;
 
+    private boolean isInactive = false;
+    private int inactiveTurns = 0;
 
     public Player(God god, DataInputStream in, DataOutputStream out, Socket socket) {
         this.god = god;
@@ -128,7 +131,7 @@ public class Player extends Thread {
             isBusy = true;
             System.out.println(getUserName() + " Joined Chat.");
 
-            chatHandler = new ChatHandler(god, this, socket, in, out);
+            chatHandler = new ChatHandler(god, this);
             chatHandler.start();
         }
     }
@@ -137,22 +140,16 @@ public class Player extends Thread {
     public void vote() throws IOException {
 
         isBusy = true;
-        askingWhoHandler = new AskingHandler(god, this, socket, in, out, "Vote");
+        askingWhoHandler = new AskingHandler(god, this, "Vote");
         askingWhoHandler.start();
 
     }
 
-    public void endVoting(){
-
-        if (askingWhoHandler != null) {
-            askingWhoHandler.interrupt();
-            System.out.println("interrupting " + getUserName());
-        }
-        isBusy = false;
-
-    }
 
     public void setAnswerOfWho(int answer) {
+        if (role instanceof SimpleMafia){
+            god.suggestGodFather(answer);
+        }
 
         answerOfWho = answer;
         sendToClient("Got it.");
@@ -161,6 +158,8 @@ public class Player extends Thread {
         if (god.nobodyIsBusy()){
             god.stopWaiting();
         }
+
+
     }
 
     public boolean askYesOrNo(String question){
@@ -168,7 +167,7 @@ public class Player extends Thread {
 
         isBusy = true;
 
-        AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "YesOrNo");
+        AskingHandler askingHandler = new AskingHandler(god, this, "YesOrNo");
         askingHandler.start();
 
 
@@ -201,27 +200,11 @@ public class Player extends Thread {
         this.answerIsYes = answerIsYes;
         isBusy = false;
 
-
-
     }
 
 
 
     public void nightAct() {
-
-        if (role instanceof Bulletproof) {
-            if (((Bulletproof) role).canInquiry()) {
-                answerIsYes = askYesOrNo(role.actQuestion());
-                if (answerIsYes) {
-                    ((Bulletproof) role).inquiry();
-                }
-            }
-            if (god.nobodyIsBusy()) {
-                god.stopWaiting();
-            }
-            return;
-        }
-
 
         if (this.role.actQuestion() == null){
             sendToClient("Just wait and try to hold on :D");
@@ -230,11 +213,17 @@ public class Player extends Thread {
 
         isBusy = true;
 
+        if (role instanceof Bulletproof) {
+            answerOfWho = -2;
+            AskingHandler askingHandler = new AskingHandler(god, this, "Bulletproof");
+            askingHandler.start();
+            return;
+        }
+
         sendToClient(role.actQuestion() + "\n-1: Nobody");
 
-        AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "Night");
+        AskingHandler askingHandler = new AskingHandler(god, this, "Night");
         askingHandler.start();
-        System.out.println("Starting nightHandler for " + getName());
 
     }
 
@@ -268,7 +257,7 @@ public class Player extends Thread {
 
         isBusy = true;
 
-        AskingHandler askingHandler = new AskingHandler(god, this, socket, in, out, "Watch");
+        AskingHandler askingHandler = new AskingHandler(god, this, "Watch");
         askingHandler.start();
 
     }
@@ -282,5 +271,12 @@ public class Player extends Thread {
             e.printStackTrace();
         }
 
+    }
+
+    public void activated(){
+
+        if(inactiveTurns == 3){
+            isInactive = true;
+        }
     }
 }

@@ -2,27 +2,26 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Scanner;
 
+
 public class Main {
 
     private static final God god = new God();
 
 
-
     public static void main(String[] args) throws IOException, InterruptedException {
+
+        System.out.println();
 
         Scanner sc = new Scanner(System.in);
 
-        /*
         System.out.println("How many Players? (at least 5)");
-        int nOfAllPlayers = sc.nextInt();
+        int nOfAllPlayers = 5;/*= sc.nextInt();
 
-        while (nOfAllPlayers < 5){
-            System.out.println("at least 5");
+        while (nOfAllPlayers < 5) {
+            System.out.println("at least 5:");
             nOfAllPlayers = sc.nextInt();
         }
-         */
-
-        int nOfAllPlayers = 3;
+       */
 
         ServerSocket server = new ServerSocket(5056);
         System.out.println("Now Clients Should connect to:\n" + server + "\n");
@@ -51,6 +50,7 @@ public class Main {
 
         while (!god.gameIsOver()) {
 
+
             System.out.println("Day...");
             god.startChatroom();
 
@@ -66,6 +66,7 @@ public class Main {
         }
 
         System.out.println("... The end.");
+        System.exit(0);
 
     }
 

@@ -95,7 +95,8 @@ public class Main {
                     out.writeUTF(name);
                 }
 
-                System.out.println("Hello " + name + "!\nYou've been registered successfully.\n");
+                System.out.println("Hello " + name + "!\nYou've been registered successfully.\n" +
+                        "You can write EXIT to leave, but please don't =(");
                 //sc.nextLine();
 
                 (new Listening(in, out)).start();
@@ -103,7 +104,16 @@ public class Main {
 
                 while (true) {
 
-                    out.writeUTF(sc.nextLine());
+                    String myMassage = sc.nextLine();
+                    if (myMassage.equals("OVER")){
+                        System.out.println("Goodbye!");
+                        in.close();
+                        out.close();
+                        socket.close();
+                        System.exit(0);
+                    }
+
+                    out.writeUTF(myMassage);
 
                 }
 

@@ -3,6 +3,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ChatHandler extends Thread{
 
@@ -16,37 +19,46 @@ public class ChatHandler extends Thread{
     private final DataOutputStream out;
     private final Socket socket;
 
-    public ChatHandler(God god, Player player, Socket socket, DataInputStream in,  DataOutputStream out){
+    public ChatHandler(God god, Player player){
         this.god = god;
         this.player = player;
-        this.socket = socket;
-        this.in = in;
-        this.out = out;
+        this.socket = player.socket;
+        this.in = player.in;
+        this.out = player.out;
     }
+
+    boolean running = false;
 
     @Override
     public void run() {
+        running = true;
 
         try {
+            (new Timer()).schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (running) {
+                        try {
+                            out.writeUTF("Chat's up");
+                            running = false;
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }, 3100 + (new Random().nextInt(1000)));
 
             out.writeUTF("\nDay is Started! You Can chat for 5 minutes. Send OVER if you're done.");
 
-            long start = System.currentTimeMillis();
-            long end = start + 300000;
 
-            while (true) {
+            while (player.isBusy) {
                 String clientSays = in.readUTF();
-
-                if (end < System.currentTimeMillis()) {
-                    god.notifyEverybody("Chat time is up.");
-                    god.stopWaiting();
-                    return;
-                }
 
                 if (clientSays.equals("OVER")) {
                     out.writeUTF(PURPLE + "You" + RESET + " left chatroom.");
                     player.notifyOthers(PURPLE + player.getUserName() + RESET + " left chatroom.");
                     player.isBusy = false;
+                    running = false;
 
                     if (god.nobodyIsBusy()) {
                         god.notifyEverybody("Chatroom is empty.\n");

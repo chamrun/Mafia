@@ -11,25 +11,25 @@ public class AskingHandler extends Thread {
     private final God god;
     private final Player player;
 
-    private DataInputStream in;
+    final private DataInputStream in;
     private final DataOutputStream out;
     private final Socket socket;
     private final String type;
 
     int indexOfAnswer = -2;
+    String answer;
 
-    public AskingHandler(God god, Player player, Socket socket, DataInputStream in, DataOutputStream out, String type){
+    public AskingHandler(God god, Player player, String type){
         this.god = god;
         this.player = player;
-        this.socket = socket;
-        this.in = in;
-        this.out = out;
+        this.socket = player.socket;
+        this.in = player.in;
+        this.out = player.out;
         this.type = type;
     }
 
     @Override
     public void run() {
-
 
         try {
 
@@ -75,7 +75,6 @@ public class AskingHandler extends Thread {
 
                     if (end < System.currentTimeMillis()) {
                         out.writeUTF("Unfortunately you're late and you can't vote.");
-                        god.endElection();
                         god.stopWaiting();
                         return;
                     }
@@ -107,7 +106,8 @@ public class AskingHandler extends Thread {
                     break;
 
                 case "YesOrNo":
-                    String answer = in.readUTF();
+
+                    answer = in.readUTF();
 
                     while (!(answer.equalsIgnoreCase("yes"))
                             && !(answer.equalsIgnoreCase("no"))){
@@ -128,6 +128,35 @@ public class AskingHandler extends Thread {
 
                     break;
 
+                case "Bulletproof":
+
+                    out.writeUTF(player.role.actQuestion() + " [yes, no]");
+                    answer = in.readUTF();
+
+                    while (!(answer.equalsIgnoreCase("yes"))
+                            && !(answer.equalsIgnoreCase("no"))){
+
+                        player.sendToClient("Invalid! Write \"yes\" or \"no\".");
+                        answer = player.in.readUTF();
+
+                    }
+
+                    if (answer.equalsIgnoreCase("yes")) {
+                        player.answerIsYes = true;
+                    }
+                    else if (answer.equalsIgnoreCase("no")){
+                        player.answerIsYes = false;
+                    }
+
+                    player.sendToClient("Got it.");
+
+                    player.isBusy = false;
+                    if (god.nobodyIsBusy()){
+                        god.stopWaiting();
+                    }
+                    break;
+
+
                 case "Watch":
                     answer = in.readUTF();
 
@@ -140,7 +169,7 @@ public class AskingHandler extends Thread {
                     }
 
                     if (answer.equalsIgnoreCase("yes")) {
-                        god.addWatcher(player);
+                        player.sendToClient("Watch and enjoy :D");
                         return;
                     }
                     else if (answer.equalsIgnoreCase("no")){
@@ -153,7 +182,7 @@ public class AskingHandler extends Thread {
 
 
                 default:
-                    System.out.println("Undefined askingType.");
+                    System.out.println(type + ": ERR: Undefined askingType.");
                     break;
             }
 

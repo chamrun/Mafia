@@ -8,7 +8,7 @@ abstract class Mafia implements Role {
 
 }
 
-class GodFather extends Mafia{
+class GodFather extends Mafia {
 
     private boolean detectedBefore = false;
 
