@@ -1,8 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -13,7 +11,6 @@ public class AskingHandler extends Thread {
 
     final private DataInputStream in;
     private final DataOutputStream out;
-    private final Socket socket;
     private final String type;
 
     int indexOfAnswer = -2;
@@ -22,7 +19,6 @@ public class AskingHandler extends Thread {
     public AskingHandler(God god, Player player, String type){
         this.god = god;
         this.player = player;
-        this.socket = player.socket;
         this.in = player.in;
         this.out = player.out;
         this.type = type;
@@ -47,7 +43,8 @@ public class AskingHandler extends Thread {
                                 try {
                                     out.writeUTF("Time's up");
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    System.out.println(player.getUserName() + " disconnected.");
+                                    god.removePlayer(player);
                                 }
                             }
                         }
@@ -192,20 +189,9 @@ public class AskingHandler extends Thread {
             System.out.println("invalid input in askingHandler. Needed number.");
             player.setAnswerOfWho(-1);
         }
-        catch (SocketException e){
+        catch (IOException e) {
             System.out.println(player.getUserName() + " disconnected.");
             god.removePlayer(player);
-
-            try {
-                in.close();
-                out.close();
-                socket.close();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
     }

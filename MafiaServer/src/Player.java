@@ -1,12 +1,12 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ConcurrentModificationException;
 
 
-public class Player extends Thread {
+public class Player extends Thread implements Serializable {
 
     private static final String PURPLE = "\033[0;35m";
     private static final String RESET = "\033[0m";
@@ -80,15 +80,12 @@ public class Player extends Thread {
             god.addPlayer(this);
 
         }
-        catch (SocketException e){
-            System.out.println(getUserName() + " disconnected.");
-            god.removePlayer(this);
-        }
         catch (ConcurrentModificationException e){
             System.out.println("Player couldn't register successfully.");
         }
-        catch (IOException e /*| InterruptedException e*/) {
-            e.printStackTrace();
+        catch (IOException e) {
+            System.out.println(getUserName() + " disconnected.");
+            god.removePlayer(this);
         }
     }
 
@@ -137,7 +134,7 @@ public class Player extends Thread {
     }
 
 
-    public void vote() throws IOException {
+    public void vote(){
 
         isBusy = true;
         askingWhoHandler = new AskingHandler(god, this, "Vote");
@@ -177,7 +174,8 @@ public class Player extends Thread {
                 try {
                     wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    System.out.println(getUserName() + " disconnected.");
+                    god.removePlayer(this);
                 }
             }
         }
@@ -237,12 +235,9 @@ public class Player extends Thread {
         try {
             out.writeUTF(playerListens);
         }
-        catch (SocketException e){
+        catch (IOException e) {
             System.out.println(getUserName() + " disconnected.");
             god.removePlayer(this);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
         }
 
     }

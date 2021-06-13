@@ -1,21 +1,128 @@
-import java.io.IOException;
+import org.apache.commons.io.FileUtils;
+
+import java.io.*;
 import java.net.ServerSocket;
+import java.util.Collection;
 import java.util.Scanner;
 
 
 public class Main {
 
-    private static final God god = new God();
+    static Scanner sc = new Scanner(System.in);
 
-
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args){
 
         System.out.println();
 
-        Scanner sc = new Scanner(System.in);
+
+
+        while (true) {
+            System.out.println("What to do?\n" +
+                    "0. New Game\n" +
+                    "1. Saved Games");
+
+            int choice = sc.nextInt();
+
+            switch (choice) {
+                case 0:
+                    newGame();
+
+                case 1:
+                    loadGame();
+                    break;
+
+                default:
+                    System.out.println("Undefined. Again: ");
+                    break;
+            }
+        }
+
+
+    }
+
+    private static void loadGame() {
+
+        God god = null;
+
+        File directory = new File("savedGames\\");
+
+        Collection<File> files = FileUtils.listFiles(directory,
+                new String[] {"txt"}, true);
+
+        try {
+            for (File f : files) {
+                System.out.println(f.getName());
+            /*
+            FileInputStream fis = new FileInputStream(f);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+
+            try {
+                Note temp;
+                temp = (Note) ois.readObject();
+                temp.shortPrint();
+                fis.close();
+                ois.close();
+
+            } catch (EOFException ignored){
+            } catch (ClassNotFoundException | IOException e) {
+                e.printStackTrace();
+            }
+
+             */
+            }
+
+            System.out.println("\nEnter name of a note to open it ('0' to go back)");
+            sc.nextLine();
+            String note = sc.nextLine();
+
+            if (!note.equals("0")) {
+
+                for (File f : files) {
+                    if (f.getName().equalsIgnoreCase(note)
+                            || f.getName().equalsIgnoreCase(note + ".txt")) {
+
+                        FileInputStream fis = new FileInputStream(f);
+                        ObjectInputStream ois = new ObjectInputStream(fis);
+
+                        try {
+                            god = (God) ois.readObject();
+
+                        } catch (ClassNotFoundException | IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        System.out.println("\n0. Delete\n" +
+                                "1. Play");
+
+                        int choice = sc.nextInt();
+                        fis.close();
+                        ois.close();
+
+
+                        if (choice == 0) {
+                            try {
+                                FileUtils.forceDelete(f);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        startGame(god);
+    }
+
+    private static void newGame() {
+        final God god = new God();
 
         System.out.println("How many Players? (at least 5)");
-        int nOfAllPlayers = 5;/*= sc.nextInt();
+        int nOfAllPlayers = 3;/*= sc.nextInt();
 
         while (nOfAllPlayers < 5) {
             System.out.println("at least 5:");
@@ -23,7 +130,13 @@ public class Main {
         }
        */
 
-        ServerSocket server = new ServerSocket(5056);
+        ServerSocket server = null;
+        try {
+            server = new ServerSocket(5056);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         System.out.println("Now Clients Should connect to:\n" + server + "\n");
 
         for (int i = 0; i < nOfAllPlayers; i++) {
@@ -32,27 +145,46 @@ public class Main {
 
         }
 
-        Thread.sleep(500);
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         System.out.println("\nAll Players are connected.\n");
 
         int nUnready = nOfAllPlayers - god.nActives();
 
         while (nUnready != 0) {
             System.out.println(nUnready + " Player(s) is (are) not registered yet.");
-            Thread.sleep(4000);
+            try {
+                Thread.sleep(4000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             nUnready = nOfAllPlayers - god.nActives();
         }
 
         god.setRandomRoles();
         System.out.println("Roles Are Set.");
 
+
         god.turnFirstNight();
 
-        while (!god.gameIsOver()) {
+        startGame(god);
+    }
+
+    private static void startGame(God god) {
+
+        (new Command(god)).start();
+
+        while (true) {
 
 
             System.out.println("Day...");
             god.startChatroom();
+
+            if (god.gameIsOver())
+                break;
 
             System.out.println("Election...");
             god.election();
@@ -63,11 +195,13 @@ public class Main {
             System.out.println("Night...");
             god.turnNight();
 
+            if (god.gameIsOver())
+                break;
+
         }
 
         System.out.println("... The end.");
         System.exit(0);
-
     }
 
 }

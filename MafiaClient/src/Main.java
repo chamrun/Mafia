@@ -105,7 +105,8 @@ public class Main {
                 while (true) {
 
                     String myMassage = sc.nextLine();
-                    if (myMassage.equals("OVER")){
+
+                    if (myMassage.equals("EXIT")){
                         System.out.println("Goodbye!");
                         in.close();
                         out.close();
