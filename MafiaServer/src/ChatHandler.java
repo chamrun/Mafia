@@ -6,9 +6,18 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * The type Chat handler.
+ */
 public class ChatHandler extends Thread{
 
+    /**
+     * The constant PURPLE.
+     */
     public static final String PURPLE = "\033[0;35m";
+    /**
+     * The constant RESET.
+     */
     public static final String RESET = "\033[0m";
 
     private final God god;
@@ -17,6 +26,12 @@ public class ChatHandler extends Thread{
     private final DataInputStream in;
     private final DataOutputStream out;
 
+    /**
+     * Instantiates a new Chat handler.
+     *
+     * @param god    the god
+     * @param player the player
+     */
     public ChatHandler(God god, Player player){
         this.god = god;
         this.player = player;
@@ -24,6 +39,9 @@ public class ChatHandler extends Thread{
         this.out = player.out;
     }
 
+    /**
+     * The Running.
+     */
     boolean running = false;
 
     @Override

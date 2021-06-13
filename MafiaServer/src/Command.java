@@ -7,13 +7,27 @@ import java.io.ObjectOutputStream;
 import java.util.Scanner;
 
 
+/**
+ * The type Command.
+ */
 public class Command extends Thread{
+    /**
+     * The God.
+     */
     God god;
 
+    /**
+     * Instantiates a new Command.
+     *
+     * @param god the god
+     */
     public Command(God god){
         this.god = god;
     }
 
+    /**
+     * The Sc.
+     */
     Scanner sc = new Scanner(System.in);
 
     @Override

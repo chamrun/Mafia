@@ -4,6 +4,15 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * The Asking handler.
+ * It can ask:
+ *  0. Who to Vote?
+ *  1. Who to act on night?
+ *  2. Yes Or No? (Canceling Election by Mayor etc...)
+ *  3. the Bulletproof wants to ask inquiry?
+ *  4. Wanna watch game?
+ */
 public class AskingHandler extends Thread {
 
     private final God god;
@@ -13,9 +22,28 @@ public class AskingHandler extends Thread {
     private final DataOutputStream out;
     private final String type;
 
+    /**
+     * The Index of answer for
+     *  0. Who to Vote?
+     *  1. Who to act on night?
+     *  2. Yes Or No? (Canceling Election by Mayor etc...)
+     *
+     */
     int indexOfAnswer = -2;
+    /**
+     * The Answer for
+     *  0. the Bulletproof wants to ask inquiry?
+     *  1. Wanna watch game?
+     */
     String answer;
 
+    /**
+     * Instantiates a new Asking handler.
+     *
+     * @param god    the god
+     * @param player the player who's been asked
+     * @param type   the type of question
+     */
     public AskingHandler(God god, Player player, String type){
         this.god = god;
         this.player = player;
@@ -48,7 +76,7 @@ public class AskingHandler extends Thread {
                                 }
                             }
                         }
-                    }, 31000);
+                    }, 31000); // if there won't be a answer in time, asked Client to say something to free DataInputStream
 
                     StringBuilder massage = new StringBuilder("\nWho do you vote? (Enter number)\n-1: Nobody\n");
 
@@ -76,7 +104,7 @@ public class AskingHandler extends Thread {
                         return;
                     }
 
-                    player.setAnswerOfWho(indexOfAnswer);
+                    player.setVote(indexOfAnswer);
 
                     break;
 
@@ -98,7 +126,7 @@ public class AskingHandler extends Thread {
                         indexOfAnswer = Integer.parseInt(in.readUTF());
                     }
 
-                    player.setAnswerOfWho(indexOfAnswer);
+                    player.setNightAct(indexOfAnswer);
 
                     break;
 
@@ -187,7 +215,8 @@ public class AskingHandler extends Thread {
         }
         catch (NumberFormatException e){
             System.out.println("invalid input in askingHandler. Needed number.");
-            player.setAnswerOfWho(-1);
+            player.setVote(-1);
+            player.setNightAct(-1);
         }
         catch (IOException e) {
             System.out.println(player.getUserName() + " disconnected.");

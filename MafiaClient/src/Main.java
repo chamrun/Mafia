@@ -10,9 +10,9 @@ public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 /*
-        System.out.print("Host (mafia default: 192.0.0.1): ");
+        System.out.print("Addr: (mafia default: 192.0.0.1): ");
         String host = sc.nextLine();
-        System.out.print("Host (mafia default: 5056): ");
+        System.out.print("port (mafia default: 5056): ");
         int port = sc.nextInt();
 
  */

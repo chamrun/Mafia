@@ -1,23 +1,51 @@
 import java.io.Serializable;
 
+/**
+ * The interface Role.
+ */
 interface Role extends Serializable {
+    /**
+     * Act question string.
+     *
+     * @return the string
+     */
     String actQuestion();
+
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
     String getName();
 
 }
 
+/**
+ * The type Mafia.
+ */
 abstract class Mafia implements Role{
 
 }
 
+/**
+ * The type God father.
+ */
 class GodFather extends Mafia {
 
     private boolean detectedBefore = false;
 
+    /**
+     * Has been detected before boolean.
+     *
+     * @return the boolean
+     */
     public boolean hasBeenDetectedBefore(){
         return detectedBefore;
     }
 
+    /**
+     * Detect.
+     */
     public void detect(){
         detectedBefore = true;
     }
@@ -33,6 +61,9 @@ class GodFather extends Mafia {
     }
 }
 
+/**
+ * The type Doctor lector.
+ */
 class DoctorLector extends Mafia{
 
     @Override
@@ -46,6 +77,9 @@ class DoctorLector extends Mafia{
     }
 }
 
+/**
+ * The type Simple mafia.
+ */
 class SimpleMafia extends Mafia{
 
     @Override
@@ -60,17 +94,31 @@ class SimpleMafia extends Mafia{
 }
 
 
+/**
+ * The type Citizen.
+ */
 abstract class Citizen implements Role{
 }
 
+/**
+ * The type City doctor.
+ */
 class CityDoctor extends Citizen{
 
     private boolean savedCityDrBefore = false;
 
+    /**
+     * Has saved city dr before boolean.
+     *
+     * @return the boolean
+     */
     public boolean hasSavedCityDrBefore() {
         return savedCityDrBefore;
     }
 
+    /**
+     * Save city dr.
+     */
     public void saveCityDr(){
         savedCityDrBefore = true;
     }
@@ -86,6 +134,9 @@ class CityDoctor extends Citizen{
     }
 }
 
+/**
+ * The type Mayor.
+ */
 class Mayor extends Citizen{
 
     @Override
@@ -99,6 +150,9 @@ class Mayor extends Citizen{
     }
 }
 
+/**
+ * The type Detective.
+ */
 class Detective extends Citizen{
 
     @Override
@@ -113,6 +167,9 @@ class Detective extends Citizen{
 }
 
 
+/**
+ * The type Psychic.
+ */
 class Psychic extends Citizen{
 
 
@@ -128,23 +185,42 @@ class Psychic extends Citizen{
 }
 
 
+/**
+ * The type Bulletproof.
+ */
 class Bulletproof extends Citizen{
 
     private boolean shot = false;
     private int nInquiry = 2;
 
+    /**
+     * Is shot boolean.
+     *
+     * @return the boolean
+     */
     public boolean isShot() {
         return shot;
     }
 
+    /**
+     * Shot.
+     */
     public void shot(){
         shot = true;
     }
 
+    /**
+     * Inquiry.
+     */
     public void inquiry(){
         nInquiry--;
     }
 
+    /**
+     * Can inquiry boolean.
+     *
+     * @return the boolean
+     */
     public boolean canInquiry(){
         return 0 < nInquiry;
     }
@@ -160,14 +236,25 @@ class Bulletproof extends Citizen{
     }
 }
 
+/**
+ * The type Sniper.
+ */
 class Sniper extends Citizen{
 
     private boolean hasBullet = true;
 
+    /**
+     * Has bullet boolean.
+     *
+     * @return the boolean
+     */
     public boolean hasBullet(){
         return hasBullet;
     }
 
+    /**
+     * Shot.
+     */
     public void shot(){
         hasBullet = false;
     }
@@ -183,6 +270,9 @@ class Sniper extends Citizen{
     }
 }
 
+/**
+ * The type Simple citizen.
+ */
 class SimpleCitizen extends Citizen{
 
 

@@ -1,11 +1,13 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.Socket;
 import java.util.ConcurrentModificationException;
 
 
+/**
+ * The Player and Things he needs
+ */
 public class Player implements Runnable{
 
     private static final String PURPLE = "\033[0;35m";
@@ -14,12 +16,14 @@ public class Player implements Runnable{
     private final God god;
 
     private String name;
+
     public Role role;
 
     public boolean isBusy = false;
     private boolean isSilent = false;
     private int answerOfWho = -1;
-    private int nVotes = 0;
+    private int nVotes = 0; // number of people who voted this player to be killed
+
 
     DataInputStream in;
     DataOutputStream out;
@@ -31,6 +35,14 @@ public class Player implements Runnable{
     private boolean isInactive = false;
     private int inactiveTurns = 0;
 
+    /**
+     * Instantiates a new Player.
+     *
+     * @param god    the god
+     * @param in     the
+     * @param out    the out
+     * @param socket the socket
+     */
     public Player(God god, DataInputStream in, DataOutputStream out, Socket socket) {
         this.god = god;
         this.in = in;
@@ -38,22 +50,43 @@ public class Player implements Runnable{
         this.socket = socket;
     }
 
+    /**
+     * Add vote.
+     */
     public void addVote(){
         nVotes++;
     }
 
+    /**
+     * Reset vote.
+     */
     public void resetVote(){
         nVotes = 0;
     }
 
+    /**
+     * Get n vote int.
+     *
+     * @return the int
+     */
     public int getNVote(){
         return nVotes;
     }
 
+    /**
+     * Is busy boolean.
+     *
+     * @return the boolean
+     */
     public boolean isBusy() {
         return isBusy;
     }
 
+    /**
+     * Gets answer of who.
+     *
+     * @return the answer of who
+     */
     public int getAnswerOfWho() {
         isBusy = false;
         int temp = answerOfWho;
@@ -90,6 +123,11 @@ public class Player implements Runnable{
     }
 
 
+    /**
+     * Run.
+     *
+     * @param backup the backup
+     */
     public void run(Backup backup) {
 
         try {
@@ -122,14 +160,27 @@ public class Player implements Runnable{
     }
 
 
+    /**
+     * Gets user name.
+     *
+     * @return the user name
+     */
     public String getUserName() {
         return name;
     }
 
+    /**
+     * Get role n ame string.
+     *
+     * @return the string
+     */
     public String getRoleNAme(){
         return role.getName();
     }
 
+    /**
+     * Introduction.
+     */
     public void introduction() {
         String massage = "Your role is: " + PURPLE + this.role.getName() + RESET + "\n";
 
@@ -148,6 +199,9 @@ public class Player implements Runnable{
 
     }
 
+    /**
+     * Join chat.
+     */
     public void joinChat() {
 
         if (isSilent) {
@@ -163,6 +217,9 @@ public class Player implements Runnable{
     }
 
 
+    /**
+     * Vote.
+     */
     public void vote(){
 
         isBusy = true;
@@ -172,7 +229,29 @@ public class Player implements Runnable{
     }
 
 
-    public void setAnswerOfWho(int answer) {
+    /**
+     * Sets vote.
+     *
+     * @param answer the answer
+     */
+    public void setVote(int answer) {
+
+        answerOfWho = answer;
+        sendToClient("Got it. before it's too late, you can write -1 to change your vote.");
+        isBusy = false;
+
+        if (god.nobodyIsBusy()){
+            god.stopWaiting();
+        }
+    }
+
+
+    /**
+     * Sets night act.
+     *
+     * @param answer the answer
+     */
+    public void setNightAct(int answer) {
         if (role instanceof SimpleMafia){
             god.suggestGodFather(answer);
         }
@@ -184,10 +263,15 @@ public class Player implements Runnable{
         if (god.nobodyIsBusy()){
             god.stopWaiting();
         }
-
-
     }
 
+
+    /**
+     * Ask yes or no boolean.
+     *
+     * @param question the question
+     * @return the boolean
+     */
     public boolean askYesOrNo(String question){
         sendToClient(question + "[yes, no]");
 
@@ -215,8 +299,16 @@ public class Player implements Runnable{
 
     }
 
+    /**
+     * The Answer is yes.
+     */
     boolean answerIsYes;
 
+    /**
+     * End yes or no.
+     *
+     * @param answerIsYes the answer is yes
+     */
     public void endYesOrNo(boolean answerIsYes) {
 
         synchronized(Player.this) {
@@ -230,7 +322,9 @@ public class Player implements Runnable{
     }
 
 
-
+    /**
+     * Night act.
+     */
     public void nightAct() {
 
         if (this.role.actQuestion() == null){
@@ -254,11 +348,21 @@ public class Player implements Runnable{
 
     }
 
+    /**
+     * Notify others.
+     *
+     * @param massage the massage
+     */
     public void notifyOthers(String massage){
         god.notifyEverybody(massage, this);
     }
 
 
+    /**
+     * Send to client.
+     *
+     * @param playerListens the player listens
+     */
     public void sendToClient(String playerListens){
 
         try {
@@ -271,10 +375,16 @@ public class Player implements Runnable{
 
     }
 
+    /**
+     * Mute.
+     */
     public void mute() {
         isSilent = true;
     }
 
+    /**
+     * Suggest watching.
+     */
     public void suggestWatching() {
 
         sendToClient("You're Dead!\nDo You Wanna Watch Game? [yes, no]");
@@ -286,6 +396,9 @@ public class Player implements Runnable{
 
     }
 
+    /**
+     * End.
+     */
     public void end() {
         try {
             in.close();
@@ -297,6 +410,9 @@ public class Player implements Runnable{
 
     }
 
+    /**
+     * Activated.
+     */
     public void activated(){
 
         if(inactiveTurns == 3){

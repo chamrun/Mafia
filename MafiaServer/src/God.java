@@ -1,23 +1,37 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
+/**
+ * The God contains all sensitive information of a running game.
+ */
 public class God {
 
 
-
+    /**
+     * The constant PURPLE to color names. for beautifier and cleaner console.
+     */
     public static final String PURPLE = "\033[0;35m";
     public static final String RESET = "\033[0m";
 
     private final ArrayList<Player> actives;
     private final ArrayList<Player> watchers;
+    /**
+     * a flag to know wait or run. it's true when god is waiting for chat, vote or night to end.
+     */
     boolean waiting;
+
+    /**
+     * it's used in the end of game.
+     */
     private final StringBuilder listOfAllPlayers;
 
+    /**
+     * Instantiates a new God.
+     */
     public God() {
         actives = new ArrayList<>();
         watchers = new ArrayList<>();
@@ -25,6 +39,11 @@ public class God {
         waiting = false;
     }
 
+    /**
+     * Adds an active Client to game, when it game is gonna start.
+     *
+     * @param server the server that's gonna accept new Client.
+     */
     public void addActive(ServerSocket server){
 
         try {
@@ -45,6 +64,12 @@ public class God {
 
     }
 
+    /**
+     * Adds active Clients, when we are loading a backup.
+     *
+     * @param server the server
+     * @param backup the backup
+     */
     public void addActive(ServerSocket server, Backup backup) {
 
         try {
@@ -66,15 +91,28 @@ public class God {
     }
 
 
+    /**
+     * Add player to Arraylist of activePlayers.
+     *
+     * @param player the new player which is completed.
+     */
     public void addPlayer(Player player) {
         actives.add(player);
     }
 
+    /**
+     * Removes a player that has been killed or disconnected.
+     *
+     * @param player the player we should say goodbye to!
+     */
     public void removePlayer(Player player) {
         actives.remove(player);
         player.end();
     }
 
+    /**
+     * Sets random roles.
+     */
     public void setRandomRoles() {
 
         ArrayList<Role> roles = importantRoles();
@@ -89,6 +127,10 @@ public class God {
 
     }
 
+    /**
+     * based on the number of players,
+     * @return an arrayList of roles to be given to players.
+     */
     private ArrayList<Role> importantRoles() {
         int nRoles = actives.size();
 
@@ -119,13 +161,11 @@ public class God {
             return roles;
         }
 
- /*       roles.add(new SimpleCitizen());
+        roles.add(new SimpleCitizen());
         nRoles--;
         if (nRoles == 0){
             return roles;
         }
-
-
 
         roles.add(new DoctorLector());
         nRoles--;
@@ -146,7 +186,6 @@ public class God {
             return roles;
         }
 
-  */
 
         roles.add(new SimpleMafia());
         nRoles--;
@@ -175,6 +214,9 @@ public class God {
         return roles;
     }
 
+    /**
+     * Turn first night and sends players their roles.
+     */
     public void turnFirstNight() {
 
         for (Player p: actives){
@@ -183,6 +225,9 @@ public class God {
         }
     }
 
+    /**
+     * Start chatroom in the day.
+     */
     public void startChatroom() {
         waiting = true;
 
@@ -204,7 +249,9 @@ public class God {
     }
 
 
-
+    /**
+     * Stop waiting when chat, election or night is done.
+     */
     public void stopWaiting() {
 
         synchronized(God.this) {
@@ -213,6 +260,9 @@ public class God {
         }
     }
 
+    /**
+     * Election.
+     */
     public void election() {
         waiting = true;
 
@@ -221,6 +271,7 @@ public class God {
         }
 
         keepWaiting();
+        notifyEverybody("Election is done.");
 
         for (Player p: actives) {
             int answer = p.getAnswerOfWho();
@@ -279,18 +330,22 @@ public class God {
     private void keepWaiting() {
         synchronized(this) {
             while(waiting) {
-                System.out.println("Waiting for Voting to end...");
+                System.out.println("Waiting for acts to end...");
                 try {
                     wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            System.out.println("Election is done.");
-            notifyEverybody("Election is done.");
+            System.out.println("Acts are done.");
         }
     }
 
+    /**
+     * Turn night.
+     * Everyone acts, based on his role.
+     * than results will be shown and night will end.
+     */
     public void turnNight() {
         waiting = true;
 
@@ -310,6 +365,7 @@ public class God {
         }
 
         keepWaiting();
+        notifyEverybody("Night is done.");
 
         for (Player p: actives){
             int answer = p.getAnswerOfWho();
@@ -430,6 +486,11 @@ public class God {
 
     }
 
+    /**
+     * Notify all of active players and watchers..
+     *
+     * @param massage the massage that we wanna say to everybody.
+     */
     public void notifyEverybody(String massage) {
 
         for (Player p : actives) {
@@ -442,6 +503,12 @@ public class God {
 
     }
 
+    /**
+     * Notify everybody except the player which massage is about.
+     *
+     * @param massage the massage
+     * @param except  the person who won't get this massage
+     */
     public void notifyEverybody(String massage, Player except) {
         for (Player p: actives){
             if (!p.equals(except)){
@@ -454,6 +521,12 @@ public class God {
         }
     }
 
+    /**
+     * When someone ends an action. we call this method to check if anyone is bury or no
+     * to stop waiting if everyone's done.
+     *
+     * @return true if everybody is waiting, false if there's anyone still busy.
+     */
     public boolean nobodyIsBusy() {
 
         for (Player p: actives) {
@@ -465,6 +538,13 @@ public class God {
         return true;
     }
 
+    /**
+     * Checks if a name has been used before or not.
+     *
+     * @param name the name we wanna check
+     * @return true if name is used
+     *         false if name id not used before
+     */
     public boolean nameIsUsed(String name) {
         if (name.equals("")){
             return true;
@@ -477,6 +557,12 @@ public class God {
         return false;
     }
 
+    /**
+     * Get user name string.
+     *
+     * @param index the index of player
+     * @return the name of player
+     */
     public String getUserName(int index){
         if (index == -1){
             return "";
@@ -484,6 +570,10 @@ public class God {
         return actives.get(index).getUserName();
     }
 
+    /**
+     * @param role we give this method a role
+     * @return and if that role is in game, returns it to us.
+     */
     private Player getPlayer(String role){
 
         for (Player p: actives) {
@@ -495,15 +585,28 @@ public class God {
         return null;
     }
 
+    /**
+     * kills player
+     * @param toDie the player who's taking last breathes
+     */
     private void kill(Player toDie) {
 
-        actives.remove(toDie);
-        notifyEverybody(PURPLE + toDie.getUserName() + RESET + " Died!\n");
-        watchers.add(toDie);
-        toDie.suggestWatching();
+        try {
 
+            actives.remove(toDie);
+            notifyEverybody(PURPLE + toDie.getUserName() + RESET + " Died!\n");
+            watchers.add(toDie);
+            toDie.suggestWatching();
+        }
+        catch (NullPointerException e){
+            System.out.println("Player has been killed before!");
+        }
     }
 
+    /**
+     * asks mayor if wants to cancel election or no.
+     * @return answer of mayor.
+     */
     private boolean mayorCancels(){
 
 
@@ -517,6 +620,10 @@ public class God {
 
     }
 
+    /**
+     * says to detection that his selected one, is citizen or mafia.
+     * @param onDetect the person who detective asked about.
+     */
     private void detectionResult(Player onDetect) {
         System.out.println("Detecting on " + onDetect.getUserName() + "...");
 
@@ -545,10 +652,19 @@ public class God {
         }
     }
 
+    /**
+     * @return the number od active players.
+     */
     public int nActives(){
         return actives.size();
     }
 
+    /**
+     * Gets mafia list.
+     *
+     * @param requester the requester, to be checked and make sure that he's a mafia
+     * @return the mafia list
+     */
     public String getMafiaList(Player requester) {
         if (requester.role instanceof Citizen){
             return "Access Denied.";
@@ -565,6 +681,12 @@ public class God {
         }
     }
 
+    /**
+     * Who is city doctor string.
+     *
+     * @param requester the requester, cuz should be the Mayor.
+     * @return result that who is city Doctor.
+     */
     public String whoIsCityDoctor(Player requester){
 
         if (!(requester.role instanceof Mayor)){
@@ -580,6 +702,11 @@ public class God {
         return "Doctor of City is " + getPlayer("City Doctor") + "\n";
     }
 
+    /**
+     * Game is over boolean.
+     *
+     * @return the game is over or not.
+     */
     public boolean gameIsOver() {
 
         int nMafia = 0, nCitizen = 0;
@@ -610,6 +737,10 @@ public class God {
 
     }
 
+    /**
+     * Shows final result of game to all of players and watchers.
+     * @param mafiaWon if mafia won, ir not (== or citizens are won)
+     */
     private void displayFinalResult(boolean mafiaWon) {
 
         if (mafiaWon){
@@ -627,30 +758,45 @@ public class God {
         endGame();
     }
 
+    /**
+     * End game and closes all players, their sockets and these kind of stuff.
+     */
     public void endGame() {
-        for (Player p: actives){
+
+        Iterator iterator = actives.iterator();
+
+        while (iterator.hasNext()) {
             try {
-                p.in.close();
-                p.out.close();
-                p.socket.close();
+                Player player = (Player) iterator.next();
+                player.in.close();
+                player.out.close();
+                player.socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        for (Player p: watchers){
+        iterator = watchers.iterator();
+
+        while (iterator.hasNext()) {
             try {
-                p.in.close();
-                p.out.close();
-                p.socket.close();
+                Player player = (Player) iterator.next();
+                player.in.close();
+                player.out.close();
+                player.socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    /**
+     * Suggest god father who to kill
+     *
+     * @param indexOfAnswer the index of suggestion, sent by SimpleMafia
+     */
     public void suggestGodFather(int indexOfAnswer) {
-        if (indexOfAnswer == -1) {
+        if (indexOfAnswer == -1) {  // Nothing to do if there's no suggestion
             return;
         }
 
@@ -662,6 +808,12 @@ public class God {
         godFather.sendToClient("Simple mafia suggests you to kill " + actives.get(indexOfAnswer).getUserName());
     }
 
+    /**
+     * Get backup to be saved.
+     *
+     * @param title the title we chose for backup
+     * @return the backup
+     */
     public Backup getBackUp(String title){
         Backup backup = new Backup(title);
 
