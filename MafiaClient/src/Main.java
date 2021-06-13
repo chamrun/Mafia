@@ -90,7 +90,7 @@ public class Main {
                 out.writeUTF(name);
 
                 while (in.readUTF().equals("BadName")) {
-                    System.out.print("Your chosen name is already used.\nTry another name: ");
+                    System.out.print("Invalid name.\nTry Again: ");
                     name = sc.nextLine();
                     out.writeUTF(name);
                 }
@@ -105,7 +105,8 @@ public class Main {
                 while (true) {
 
                     String myMassage = sc.nextLine();
-                    if (myMassage.equals("OVER")){
+
+                    if (myMassage.equals("EXIT")){
                         System.out.println("Goodbye!");
                         in.close();
                         out.close();

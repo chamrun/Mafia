@@ -1,12 +1,12 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ConcurrentModificationException;
 
 
-public class Player extends Thread {
+public class Player implements Runnable{
 
     private static final String PURPLE = "\033[0;35m";
     private static final String RESET = "\033[0m";
@@ -66,11 +66,11 @@ public class Player extends Thread {
 
         try {
 
-            name = in.readUTF();
+            name = PURPLE + in.readUTF() + RESET;
 
             while (god.nameIsUsed(name)) {
                 out.writeUTF("BadName");
-                name = in.readUTF();
+                name = PURPLE + in.readUTF() + RESET;
             }
 
             out.writeUTF("GoodName");
@@ -80,23 +80,49 @@ public class Player extends Thread {
             god.addPlayer(this);
 
         }
-        catch (SocketException e){
+        catch (ConcurrentModificationException e){
+            System.out.println("Player couldn't register successfully.");
+        }
+        catch (IOException e) {
             System.out.println(getUserName() + " disconnected.");
             god.removePlayer(this);
+        }
+    }
+
+
+    public void run(Backup backup) {
+
+        try {
+
+            name = PURPLE + in.readUTF() + RESET;
+
+            while (!backup.nameExists(name)) {
+                out.writeUTF("BadName");
+                name = PURPLE + in.readUTF() + RESET;
+            }
+
+            out.writeUTF("GoodName");
+
+            System.out.println(getUserName() + " registered.\n");
+            god.notifyEverybody((god.nActives() + 1) + " actives.");
+
+            role = backup.getRole(name);
+
+            god.addPlayer(this);
+
         }
         catch (ConcurrentModificationException e){
             System.out.println("Player couldn't register successfully.");
         }
-        catch (IOException e /*| InterruptedException e*/) {
-            e.printStackTrace();
+        catch (IOException e) {
+            System.out.println(getUserName() + " disconnected.");
+            god.removePlayer(this);
         }
+
     }
+
 
     public String getUserName() {
-        return PURPLE + name + RESET;
-    }
-
-    public String compareNames(){
         return name;
     }
 
@@ -137,7 +163,7 @@ public class Player extends Thread {
     }
 
 
-    public void vote() throws IOException {
+    public void vote(){
 
         isBusy = true;
         askingWhoHandler = new AskingHandler(god, this, "Vote");
@@ -177,7 +203,8 @@ public class Player extends Thread {
                 try {
                     wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    System.out.println(getUserName() + " disconnected.");
+                    god.removePlayer(this);
                 }
             }
         }
@@ -237,12 +264,9 @@ public class Player extends Thread {
         try {
             out.writeUTF(playerListens);
         }
-        catch (SocketException e){
+        catch (IOException e) {
             System.out.println(getUserName() + " disconnected.");
             god.removePlayer(this);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
         }
 
     }
@@ -279,4 +303,5 @@ public class Player extends Thread {
             isInactive = true;
         }
     }
+
 }

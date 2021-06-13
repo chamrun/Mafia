@@ -1,8 +1,7 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
-import java.net.SocketException;
+import java.io.Serializable;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -17,12 +16,10 @@ public class ChatHandler extends Thread{
 
     private final DataInputStream in;
     private final DataOutputStream out;
-    private final Socket socket;
 
     public ChatHandler(God god, Player player){
         this.god = god;
         this.player = player;
-        this.socket = player.socket;
         this.in = player.in;
         this.out = player.out;
     }
@@ -42,11 +39,12 @@ public class ChatHandler extends Thread{
                             out.writeUTF("Chat's up");
                             running = false;
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            System.out.println(player.getUserName() + " disconnected.");
+                            god.removePlayer(player);
                         }
                     }
                 }
-            }, 3100 + (new Random().nextInt(1000)));
+            }, 300000 + (new Random().nextInt(1000)));
 
             out.writeUTF("\nDay is Started! You Can chat for 5 minutes. Send OVER if you're done.");
 
@@ -71,21 +69,9 @@ public class ChatHandler extends Thread{
                 player.notifyOthers(PURPLE + player.getUserName() + ": " + RESET + clientSays);
             }
         }
-        catch (SocketException e){
+        catch (IOException e) {
             System.out.println(player.getUserName() + " disconnected.");
             god.removePlayer(player);
-
-            try {
-                in.close();
-                out.close();
-                socket.close();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-
-        }
-        catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

@@ -1,9 +1,9 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.*;
 
 public class God {
@@ -36,17 +36,35 @@ public class God {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             Player player = new Player(this, in, out, socket);
-            player.start();
+            player.run();
 
         }
-        catch (SocketException e){
-            System.out.println("Client Disconnected.");
-        }
         catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Client Disconnected.");
         }
 
     }
+
+    public void addActive(ServerSocket server, Backup backup) {
+
+        try {
+
+            Socket socket = server.accept();
+            System.out.println("New Client Connected.");
+
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+            Player player = new Player(this, in, out, socket);
+            player.run(backup);
+
+        }
+        catch (IOException e) {
+            System.out.println("Client Disconnected.");
+        }
+
+    }
+
 
     public void addPlayer(Player player) {
         actives.add(player);
@@ -163,12 +181,9 @@ public class God {
             p.introduction();
             listOfAllPlayers.append(p.getUserName()).append(" was ").append(p.role.getName()).append("\n");
         }
-
-
-
     }
 
-    public void startChatroom() throws InterruptedException {
+    public void startChatroom() {
         waiting = true;
 
         for (Player p: actives) {
@@ -178,7 +193,11 @@ public class God {
         synchronized(this) {
             while(waiting) {
                 System.out.println("Waiting for chat to end...");
-                wait();
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             System.out.println("Chat is done.");
         }
@@ -194,27 +213,14 @@ public class God {
         }
     }
 
-    public void election() throws InterruptedException {
+    public void election() {
         waiting = true;
 
         for (Player p: actives) {
-
-            try {
-                p.vote();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
+            p.vote();
         }
 
-        synchronized(this) {
-            while(waiting) {
-                System.out.println("Waiting for Voting to end...");
-                wait();
-            }
-            System.out.println("Election is done.");
-            notifyEverybody("Election is done.");
-        }
+        keepWaiting();
 
         for (Player p: actives) {
             int answer = p.getAnswerOfWho();
@@ -270,7 +276,22 @@ public class God {
         kill(toDie);
     }
 
-    public void turnNight() throws InterruptedException {
+    private void keepWaiting() {
+        synchronized(this) {
+            while(waiting) {
+                System.out.println("Waiting for Voting to end...");
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("Election is done.");
+            notifyEverybody("Election is done.");
+        }
+    }
+
+    public void turnNight() {
         waiting = true;
 
         Player killed = null;
@@ -288,17 +309,7 @@ public class God {
 
         }
 
-
-
-        synchronized(this) {
-            while(waiting) {
-                System.out.println("Waiting for Night to end...");
-                wait();
-            }
-            System.out.println("Night is done.");
-            notifyEverybody("Night is done.");
-        }
-
+        keepWaiting();
 
         for (Player p: actives){
             int answer = p.getAnswerOfWho();
@@ -459,7 +470,7 @@ public class God {
             return true;
         }
         for (Player p: actives){
-            if (p.compareNames().equals(name)){
+            if (p.getUserName().equals(name)){
                 return true;
             }
         }
@@ -616,7 +627,7 @@ public class God {
         endGame();
     }
 
-    private void endGame() {
+    public void endGame() {
         for (Player p: actives){
             try {
                 p.in.close();
@@ -650,5 +661,17 @@ public class God {
 
         godFather.sendToClient("Simple mafia suggests you to kill " + actives.get(indexOfAnswer).getUserName());
     }
+
+    public Backup getBackUp(String title){
+        Backup backup = new Backup(title);
+
+        for (Player p: actives){
+            backup.addToMap(p.getUserName(), p.role);
+        }
+
+        return backup;
+    }
+
+
 }
 

@@ -32,7 +32,7 @@ public class Listening extends Thread{
 
             }
             catch (EOFException e){
-                System.out.println("\nSee you Later!");
+                System.out.println("Game was closed.\nSee you Later!");
                 System.exit(0);
             }
             catch (SocketException e){
