@@ -53,11 +53,11 @@ public class Command extends Thread{
         try (FileOutputStream fos = new FileOutputStream("savedGames\\" + title + ".txt")){
             ObjectOutputStream oos = new ObjectOutputStream(fos);
 
-            oos.writeObject(god);
+            oos.writeObject(god.getBackUp(title));
             fos.close();
             oos.close();
 
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

@@ -2,6 +2,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Scanner;
 
@@ -42,24 +43,23 @@ public class Main {
 
     private static void loadGame() {
 
-        God god = null;
-
         File directory = new File("savedGames\\");
 
         Collection<File> files = FileUtils.listFiles(directory,
                 new String[] {"txt"}, true);
 
+        Backup backup = null;
+
         try {
             for (File f : files) {
-                System.out.println(f.getName());
-            /*
+
             FileInputStream fis = new FileInputStream(f);
             ObjectInputStream ois = new ObjectInputStream(fis);
 
             try {
-                Note temp;
-                temp = (Note) ois.readObject();
-                temp.shortPrint();
+                Backup temp;
+                temp = (Backup) ois.readObject();
+                temp.description();
                 fis.close();
                 ois.close();
 
@@ -68,10 +68,10 @@ public class Main {
                 e.printStackTrace();
             }
 
-             */
+
             }
 
-            System.out.println("\nEnter name of a note to open it ('0' to go back)");
+            System.out.println("\nEnter title of a saved game to open it ('0' to go back)");
             sc.nextLine();
             String note = sc.nextLine();
 
@@ -85,7 +85,7 @@ public class Main {
                         ObjectInputStream ois = new ObjectInputStream(fis);
 
                         try {
-                            god = (God) ois.readObject();
+                            backup = (Backup) ois.readObject();
 
                         } catch (ClassNotFoundException | IOException e) {
                             e.printStackTrace();
@@ -110,10 +110,33 @@ public class Main {
                     }
                 }
             }
+
+
+
+
         }
         catch (IOException e) {
             e.printStackTrace();
         }
+
+        final God god = new God();
+
+        ServerSocket server = null;
+        try {
+            server = new ServerSocket(5056);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Now Clients Should connect to:\n" + server + "\n");
+
+        for (int i = 0; i < backup.nPlayers(); i++) {
+
+            god.addActive(server, backup);
+
+        }
+
+
 
         startGame(god);
     }
@@ -167,15 +190,14 @@ public class Main {
         god.setRandomRoles();
         System.out.println("Roles Are Set.");
 
-
-        god.turnFirstNight();
-
         startGame(god);
     }
 
     private static void startGame(God god) {
 
         (new Command(god)).start();
+
+        god.turnFirstNight();
 
         while (true) {
 

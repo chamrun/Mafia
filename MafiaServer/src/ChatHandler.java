@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class ChatHandler extends Thread implements Serializable {
+public class ChatHandler extends Thread{
 
     public static final String PURPLE = "\033[0;35m";
     public static final String RESET = "\033[0m";

@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.ConcurrentModificationException;
 
 
-public class Player extends Thread implements Serializable {
+public class Player implements Runnable{
 
     private static final String PURPLE = "\033[0;35m";
     private static final String RESET = "\033[0m";
@@ -66,11 +66,11 @@ public class Player extends Thread implements Serializable {
 
         try {
 
-            name = in.readUTF();
+            name = PURPLE + in.readUTF() + RESET;
 
             while (god.nameIsUsed(name)) {
                 out.writeUTF("BadName");
-                name = in.readUTF();
+                name = PURPLE + in.readUTF() + RESET;
             }
 
             out.writeUTF("GoodName");
@@ -89,11 +89,40 @@ public class Player extends Thread implements Serializable {
         }
     }
 
-    public String getUserName() {
-        return PURPLE + name + RESET;
+
+    public void run(Backup backup) {
+
+        try {
+
+            name = PURPLE + in.readUTF() + RESET;
+
+            while (!backup.nameExists(name)) {
+                out.writeUTF("BadName");
+                name = PURPLE + in.readUTF() + RESET;
+            }
+
+            out.writeUTF("GoodName");
+
+            System.out.println(getUserName() + " registered.\n");
+            god.notifyEverybody((god.nActives() + 1) + " actives.");
+
+            role = backup.getRole(name);
+
+            god.addPlayer(this);
+
+        }
+        catch (ConcurrentModificationException e){
+            System.out.println("Player couldn't register successfully.");
+        }
+        catch (IOException e) {
+            System.out.println(getUserName() + " disconnected.");
+            god.removePlayer(this);
+        }
+
     }
 
-    public String compareNames(){
+
+    public String getUserName() {
         return name;
     }
 
@@ -274,4 +303,5 @@ public class Player extends Thread implements Serializable {
             isInactive = true;
         }
     }
+
 }

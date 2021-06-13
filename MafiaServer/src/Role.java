@@ -1,10 +1,12 @@
-interface Role {
+import java.io.Serializable;
+
+interface Role extends Serializable {
     String actQuestion();
     String getName();
 
 }
 
-abstract class Mafia implements Role {
+abstract class Mafia implements Role{
 
 }
 

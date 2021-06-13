@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.*;
 
-public class God implements Serializable {
+public class God {
 
 
 
@@ -37,7 +36,7 @@ public class God implements Serializable {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             Player player = new Player(this, in, out, socket);
-            player.start();
+            player.run();
 
         }
         catch (IOException e) {
@@ -45,6 +44,27 @@ public class God implements Serializable {
         }
 
     }
+
+    public void addActive(ServerSocket server, Backup backup) {
+
+        try {
+
+            Socket socket = server.accept();
+            System.out.println("New Client Connected.");
+
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+            Player player = new Player(this, in, out, socket);
+            player.run(backup);
+
+        }
+        catch (IOException e) {
+            System.out.println("Client Disconnected.");
+        }
+
+    }
+
 
     public void addPlayer(Player player) {
         actives.add(player);
@@ -161,9 +181,6 @@ public class God implements Serializable {
             p.introduction();
             listOfAllPlayers.append(p.getUserName()).append(" was ").append(p.role.getName()).append("\n");
         }
-
-
-
     }
 
     public void startChatroom() {
@@ -453,7 +470,7 @@ public class God implements Serializable {
             return true;
         }
         for (Player p: actives){
-            if (p.compareNames().equals(name)){
+            if (p.getUserName().equals(name)){
                 return true;
             }
         }
@@ -644,5 +661,17 @@ public class God implements Serializable {
 
         godFather.sendToClient("Simple mafia suggests you to kill " + actives.get(indexOfAnswer).getUserName());
     }
+
+    public Backup getBackUp(String title){
+        Backup backup = new Backup(title);
+
+        for (Player p: actives){
+            backup.addToMap(p.getUserName(), p.role);
+        }
+
+        return backup;
+    }
+
+
 }
 
