@@ -1,23 +1,19 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * The type Chat handler.
+ * The Chat handler.
  */
 public class ChatHandler extends Thread{
 
     /**
-     * The constant PURPLE.
+     * The constant Colors to make userNames more visible.
      */
     public static final String PURPLE = "\033[0;35m";
-    /**
-     * The constant RESET.
-     */
     public static final String RESET = "\033[0m";
 
     private final God god;
@@ -40,7 +36,7 @@ public class ChatHandler extends Thread{
     }
 
     /**
-     * The Running.
+     * if chatHandler is running, or not.
      */
     boolean running = false;
 
@@ -48,7 +44,7 @@ public class ChatHandler extends Thread{
     public void run() {
         running = true;
 
-        try {
+        try { // if time is up and player didn't give any answer, this part makes him to send "OVER" to end chatroom
             (new Timer()).schedule(new TimerTask() {
                 @Override
                 public void run() {

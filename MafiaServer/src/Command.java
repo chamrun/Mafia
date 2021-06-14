@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 
 /**
- * The type Command.
+ * The Command that god writes through game
  */
 public class Command extends Thread{
     /**
@@ -23,11 +23,9 @@ public class Command extends Thread{
      */
     public Command(God god){
         this.god = god;
+        System.out.println("Commands: Save, EndGame");
     }
 
-    /**
-     * The Sc.
-     */
     Scanner sc = new Scanner(System.in);
 
     @Override
@@ -37,12 +35,11 @@ public class Command extends Thread{
             String command = sc.nextLine();
 
             switch (command) {
-                case "SAVE":
+                case "Save":
                     save();
                     break;
 
-
-                case "EXIT":
+                case "EndGame":
                     god.endGame();
                     break;
 

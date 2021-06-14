@@ -24,10 +24,9 @@ public class Player implements Runnable{
     private int answerOfWho = -1;
     private int nVotes = 0; // number of people who voted this player to be killed
 
-
-    DataInputStream in;
-    DataOutputStream out;
     Socket socket;
+    DataInputStream in; // the DataInputStream that receives data from client
+    DataOutputStream out; // the DataOutputStream that sends data to client
 
     ChatHandler chatHandler;
     AskingHandler askingWhoHandler;
@@ -39,35 +38,38 @@ public class Player implements Runnable{
      * Instantiates a new Player.
      *
      * @param god    the god
-     * @param in     the
-     * @param out    the out
-     * @param socket the socket
+     * @param socket the socket that connect client (player) and server (god)
      */
-    public Player(God god, DataInputStream in, DataOutputStream out, Socket socket) {
+    public Player(God god, Socket socket) {
         this.god = god;
-        this.in = in;
-        this.out = out;
         this.socket = socket;
+
+        try {
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
-     * Add vote.
+     * Add vote, when someone voted to this player
      */
     public void addVote(){
         nVotes++;
     }
 
     /**
-     * Reset vote.
+     * Reset vote, when election is done
      */
     public void resetVote(){
         nVotes = 0;
     }
 
     /**
-     * Get n vote int.
+     * Get number of votes.
      *
-     * @return the int
+     * @return the int number of those who voted to this players
      */
     public int getNVote(){
         return nVotes;
@@ -76,14 +78,14 @@ public class Player implements Runnable{
     /**
      * Is busy boolean.
      *
-     * @return the boolean
+     * @return true if busy, false if waiting
      */
     public boolean isBusy() {
         return isBusy;
     }
 
     /**
-     * Gets answer of who.
+     * Gets answer of who, after election or night.
      *
      * @return the answer of who
      */
@@ -94,6 +96,7 @@ public class Player implements Runnable{
         return temp;
     }
 
+    // Registers player and adds him to active players, in a new game.
     @Override
     public void run() {
 
@@ -124,7 +127,7 @@ public class Player implements Runnable{
 
 
     /**
-     * Run.
+     * Registers player and adds him to active players, in a loaded game.
      *
      * @param backup the backup
      */
@@ -170,19 +173,19 @@ public class Player implements Runnable{
     }
 
     /**
-     * Get role n ame string.
+     * Get roleName as a string.
      *
-     * @return the string
+     * @return the string that says what is this player's role
      */
     public String getRoleNAme(){
         return role.getName();
     }
 
     /**
-     * Introduction.
+     * Introduction which players get in first night
      */
     public void introduction() {
-        String massage = "Your role is: " + PURPLE + this.role.getName() + RESET + "\n";
+        String massage = "Your role is: " + PURPLE + role.getName() + RESET + "\n" + role.description();
 
         if (role instanceof Mayor) {
             massage += god.whoIsCityDoctor(this);
@@ -200,7 +203,7 @@ public class Player implements Runnable{
     }
 
     /**
-     * Join chat.
+     * Join chat in start of day.
      */
     public void joinChat() {
 
@@ -218,7 +221,7 @@ public class Player implements Runnable{
 
 
     /**
-     * Vote.
+     * Vote by asking handler
      */
     public void vote(){
 
@@ -270,7 +273,7 @@ public class Player implements Runnable{
      * Ask yes or no boolean.
      *
      * @param question the question
-     * @return the boolean
+     * @return the boolean of answer
      */
     public boolean askYesOrNo(String question){
         sendToClient(question + "[yes, no]");
@@ -300,12 +303,13 @@ public class Player implements Runnable{
     }
 
     /**
-     * The Answer is yes.
+     * The Answer of asking, is yes.
+     * false, when answer is no.
      */
     boolean answerIsYes;
 
     /**
-     * End yes or no.
+     * End Asking of yes or no.
      *
      * @param answerIsYes the answer is yes
      */
@@ -323,7 +327,7 @@ public class Player implements Runnable{
 
 
     /**
-     * Night act.
+     * Night act, based on role.
      */
     public void nightAct() {
 
@@ -361,7 +365,7 @@ public class Player implements Runnable{
     /**
      * Send to client.
      *
-     * @param playerListens the player listens
+     * @param playerListens the player listens to this massage
      */
     public void sendToClient(String playerListens){
 
@@ -376,14 +380,14 @@ public class Player implements Runnable{
     }
 
     /**
-     * Mute.
+     * Mute player for a day, by command of Psychic
      */
     public void mute() {
         isSilent = true;
     }
 
     /**
-     * Suggest watching.
+     * Suggest watching game, when player dies.
      */
     public void suggestWatching() {
 
@@ -397,7 +401,7 @@ public class Player implements Runnable{
     }
 
     /**
-     * End.
+     * End player when we're done with.
      */
     public void end() {
         try {

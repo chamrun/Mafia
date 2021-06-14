@@ -163,7 +163,7 @@ public class Main {
         System.out.println("How many Players? (at least 5)");
         int nOfAllPlayers = sc.nextInt();
 
-        while (nOfAllPlayers < 5) {
+        while (nOfAllPlayers < 3) {
             System.out.println("at least 5:");
             nOfAllPlayers = sc.nextInt();
         }

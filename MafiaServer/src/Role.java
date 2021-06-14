@@ -7,17 +7,18 @@ interface Role extends Serializable {
     /**
      * Act question string.
      *
-     * @return the string
+     * @return the string that we'll be asked when role is acting in night
      */
     String actQuestion();
 
     /**
      * Gets name.
      *
-     * @return the name
+     * @return the name of role
      */
     String getName();
 
+    String description();
 }
 
 /**
@@ -28,7 +29,8 @@ abstract class Mafia implements Role{
 }
 
 /**
- * The type God father.
+ * The type GodFather.
+ * He Can kill one person every night.
  */
 class GodFather extends Mafia {
 
@@ -37,14 +39,15 @@ class GodFather extends Mafia {
     /**
      * Has been detected before boolean.
      *
-     * @return the boolean
+     * @return true: if detective asked about this person before
+     *         false: if player hasn't been on detect before
      */
     public boolean hasBeenDetectedBefore(){
         return detectedBefore;
     }
 
     /**
-     * Detect.
+     * We call this method when detective asks about godfather for the first time.
      */
     public void detect(){
         detectedBefore = true;
@@ -59,10 +62,16 @@ class GodFather extends Mafia {
     public String getName() {
         return "GodFather";
     }
+
+    @Override
+    public String description() {
+        return "GodFather";
+    }
 }
 
 /**
  * The type Doctor lector.
+ * He can save one person every night.
  */
 class DoctorLector extends Mafia{
 
@@ -75,10 +84,16 @@ class DoctorLector extends Mafia{
     public String getName() {
         return "Doctor Lector";
     }
+
+    @Override
+    public String description() {
+        return "GodFather";
+    }
 }
 
 /**
  * The type Simple mafia.
+ * suggests godfather who to kill.
  */
 class SimpleMafia extends Mafia{
 
@@ -91,6 +106,11 @@ class SimpleMafia extends Mafia{
     public String getName() {
         return "Simple Mafia";
     }
+
+    @Override
+    public String description() {
+        return "GodFather";
+    }
 }
 
 
@@ -102,13 +122,14 @@ abstract class Citizen implements Role{
 
 /**
  * The type City doctor.
+ * Saves one person every night.
  */
 class CityDoctor extends Citizen{
 
     private boolean savedCityDrBefore = false;
 
     /**
-     * Has saved city dr before boolean.
+     * Has doctor saved his self before, or not
      *
      * @return the boolean
      */
@@ -117,7 +138,7 @@ class CityDoctor extends Citizen{
     }
 
     /**
-     * Save city dr.
+     * doctor is saving his self...
      */
     public void saveCityDr(){
         savedCityDrBefore = true;
@@ -131,6 +152,11 @@ class CityDoctor extends Citizen{
     @Override
     public String getName() {
         return "City Doctor";
+    }
+
+    @Override
+    public String description() {
+        return "GodFather";
     }
 }
 
@@ -148,6 +174,11 @@ class Mayor extends Citizen{
     public String getName() {
         return "Mayor";
     }
+
+    @Override
+    public String description() {
+        return "GodFather";
+    }
 }
 
 /**
@@ -163,6 +194,11 @@ class Detective extends Citizen{
     @Override
     public String getName() {
         return "Detective";
+    }
+
+    @Override
+    public String description() {
+        return "GodFather";
     }
 }
 
@@ -182,6 +218,11 @@ class Psychic extends Citizen{
     public String getName() {
         return "Psychic";
     }
+
+    @Override
+    public String description() {
+        return "GodFather";
+    }
 }
 
 
@@ -194,7 +235,7 @@ class Bulletproof extends Citizen{
     private int nInquiry = 2;
 
     /**
-     * Is shot boolean.
+     * Is bulletproof shot before, or not.
      *
      * @return the boolean
      */
@@ -203,21 +244,21 @@ class Bulletproof extends Citizen{
     }
 
     /**
-     * Shot.
+     * Shot bulletproof!
      */
     public void shot(){
         shot = true;
     }
 
     /**
-     * Inquiry.
+     * Bulletproof asks Inquiry.
      */
     public void inquiry(){
         nInquiry--;
     }
 
     /**
-     * Can inquiry boolean.
+     * Can bulletproof ask for inquiry?
      *
      * @return the boolean
      */
@@ -234,6 +275,11 @@ class Bulletproof extends Citizen{
     public String getName() {
         return "Bulletproof";
     }
+
+    @Override
+    public String description() {
+        return "GodFather";
+    }
 }
 
 /**
@@ -244,7 +290,7 @@ class Sniper extends Citizen{
     private boolean hasBullet = true;
 
     /**
-     * Has bullet boolean.
+     * Has sniper any bullets?
      *
      * @return the boolean
      */
@@ -253,7 +299,7 @@ class Sniper extends Citizen{
     }
 
     /**
-     * Shot.
+     * Sniper shots!
      */
     public void shot(){
         hasBullet = false;
@@ -267,6 +313,11 @@ class Sniper extends Citizen{
     @Override
     public String getName() {
         return "Sniper";
+    }
+
+    @Override
+    public String description() {
+        return "GodFather";
     }
 }
 
@@ -284,6 +335,11 @@ class SimpleCitizen extends Citizen{
     @Override
     public String getName() {
         return "Simple Citizen";
+    }
+
+    @Override
+    public String description() {
+        return "GodFather";
     }
 }
 

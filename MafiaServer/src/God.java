@@ -51,10 +51,7 @@ public class God {
             Socket socket = server.accept();
             System.out.println("New Client Connected.");
 
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
-            Player player = new Player(this, in, out, socket);
+            Player player = new Player(this, socket);
             player.run();
 
         }
@@ -80,7 +77,7 @@ public class God {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            Player player = new Player(this, in, out, socket);
+            Player player = new Player(this, socket);
             player.run(backup);
 
         }
@@ -358,10 +355,8 @@ public class God {
         boolean inquiry = false;
 
 
-        for (Player p: actives){
-
+        for (Player p: actives) {
             p.nightAct();
-
         }
 
         keepWaiting();
@@ -763,30 +758,18 @@ public class God {
      */
     public void endGame() {
 
-        Iterator iterator = actives.iterator();
+        Iterator<Player> it = actives.iterator();
 
-        while (iterator.hasNext()) {
-            try {
-                Player player = (Player) iterator.next();
-                player.in.close();
-                player.out.close();
-                player.socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        while (it.hasNext()) {
+            Player player = it.next();
+            player.end();
         }
 
-        iterator = watchers.iterator();
+        it = watchers.iterator();
 
-        while (iterator.hasNext()) {
-            try {
-                Player player = (Player) iterator.next();
-                player.in.close();
-                player.out.close();
-                player.socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        while (it.hasNext()) {
+            Player player = it.next();
+            player.end();
         }
     }
 

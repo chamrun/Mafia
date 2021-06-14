@@ -2,7 +2,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 /**
- * The type Backup.
+ * The Backup, saves all we need to continue an old game.
  */
 public class Backup implements Serializable {
     private final String title;
@@ -11,7 +11,7 @@ public class Backup implements Serializable {
     /**
      * Instantiates a new Backup.
      *
-     * @param title the title
+     * @param title the title we choose for this backup
      */
     public Backup(String title){
         this.title = title;
@@ -21,15 +21,15 @@ public class Backup implements Serializable {
     /**
      * Add to map.
      *
-     * @param name the name
-     * @param role the role
+     * @param name the name of player
+     * @param role the role of player
      */
     public void addToMap(String name, Role role){
         map.put(name, role);
     }
 
     /**
-     * Description.
+     * Description of backup
      */
     public void description() {
         System.out.print(title + ": " + map.size() + " players: ");
@@ -40,9 +40,7 @@ public class Backup implements Serializable {
     }
 
     /**
-     * N players int.
-     *
-     * @return the int
+     * @return Number of players in saved game.
      */
     public int nPlayers(){
         return map.size();
@@ -51,8 +49,8 @@ public class Backup implements Serializable {
     /**
      * Name exists boolean.
      *
-     * @param name the name
-     * @return the boolean
+     * @param name the name we're looking for
+     * @return the boolean: true if name is, false if isn't
      */
     public boolean nameExists(String name){
 
@@ -67,10 +65,10 @@ public class Backup implements Serializable {
     }
 
     /**
-     * Get role role.
+     * Get role of a player.
      *
-     * @param name the name
-     * @return the role
+     * @param name the name of player
+     * @return the role of player with that name
      */
     public Role getRole(String name){
         return map.get(name);
