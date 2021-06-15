@@ -18,6 +18,11 @@ interface Role extends Serializable {
      */
     String getName();
 
+    /**
+     *
+     * @return some information about this role and its actions.
+     */
+
     String description();
 }
 
@@ -65,7 +70,7 @@ class GodFather extends Mafia {
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are Mafia and you can kill one person at a night.";
     }
 }
 
@@ -87,7 +92,7 @@ class DoctorLector extends Mafia{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are Mafia and you can save one person at a night sniperShot.";
     }
 }
 
@@ -109,7 +114,7 @@ class SimpleMafia extends Mafia{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are Mafia, in days try to deceive citizens and in night suggest Godfather who to kill.";
     }
 }
 
@@ -156,7 +161,8 @@ class CityDoctor extends Citizen{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are Citizen, you can save one person at a night from GodfatherShot.\n" +
+                "You can save yourself only once.";
     }
 }
 
@@ -177,7 +183,7 @@ class Mayor extends Citizen{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are citizen and you can cancel result of Election.";
     }
 }
 
@@ -198,7 +204,8 @@ class Detective extends Citizen{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are citizen and you can detect one person at a night to see if he's Mafia or Citizen.\n" +
+                "You should detect Godfather twice to know he's Mafia.";
     }
 }
 
@@ -221,7 +228,7 @@ class Psychic extends Citizen{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are citizen and you can mute one person at a night for a day.";
     }
 }
 
@@ -278,7 +285,8 @@ class Bulletproof extends Citizen{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are citizen. You can ask God to notify everybody how many Mafia and Citizen are in game.\n" +
+                "Godfather should shot you twice to kill you.";
     }
 }
 
@@ -317,7 +325,8 @@ class Sniper extends Citizen{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are citizen and you have one bullet to shot.\n" +
+                "If you shot a citizen, you'll die of shame :)";
     }
 }
 
@@ -339,7 +348,7 @@ class SimpleCitizen extends Citizen{
 
     @Override
     public String description() {
-        return "GodFather";
+        return "You are citizen, try to find Mafia and tell the others in day.";
     }
 }
 

@@ -23,7 +23,7 @@ public class Command extends Thread{
      */
     public Command(God god){
         this.god = god;
-        System.out.println("Commands: Save, EndGame");
+        System.out.println("\nCommands: Save, Close, StopCommanding");
     }
 
     Scanner sc = new Scanner(System.in);
@@ -39,9 +39,15 @@ public class Command extends Thread{
                     save();
                     break;
 
-                case "EndGame":
+                case "Close":
                     god.endGame();
+                    String[] args = new String[0];
+                    Main.main(args);
                     break;
+
+                case "StopCommanding":
+                    System.out.println("Ok :/");
+                    return;
 
                 default:
                     System.out.println("Undefined Command.");

@@ -1,4 +1,6 @@
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
 /**
@@ -7,6 +9,7 @@ import java.util.HashMap;
 public class Backup implements Serializable {
     private final String title;
     private final HashMap<String, Role> map;
+    String date;
 
     /**
      * Instantiates a new Backup.
@@ -16,6 +19,10 @@ public class Backup implements Serializable {
     public Backup(String title){
         this.title = title;
         map = new HashMap<>();
+
+        LocalDate date = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        this.date = formatter.format(date);
     }
 
     /**
@@ -32,7 +39,7 @@ public class Backup implements Serializable {
      * Description of backup
      */
     public void description() {
-        System.out.print(title + ": " + map.size() + " players: ");
+        System.out.print("\033[1m" + title + "\033[0m: " + date + ": " + map.size() + " players: ");
         for (String n: map.keySet()){
             System.out.print(n + " | ");
         }

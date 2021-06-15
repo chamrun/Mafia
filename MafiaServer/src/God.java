@@ -1,5 +1,3 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,6 +15,8 @@ public class God {
     public static final String PURPLE = "\033[0;35m";
     public static final String RESET = "\033[0m";
 
+    private final ServerSocket server;
+
     private final ArrayList<Player> actives;
     private final ArrayList<Player> watchers;
     /**
@@ -32,7 +32,8 @@ public class God {
     /**
      * Instantiates a new God.
      */
-    public God() {
+    public God(ServerSocket server) {
+        this.server = server;
         actives = new ArrayList<>();
         watchers = new ArrayList<>();
         listOfAllPlayers = new StringBuilder();
@@ -74,9 +75,6 @@ public class God {
             Socket socket = server.accept();
             System.out.println("New Client Connected.");
 
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-
             Player player = new Player(this, socket);
             player.run(backup);
 
@@ -116,10 +114,8 @@ public class God {
         Collections.shuffle(roles);
 
         for (Player p: actives) {
-
             p.role = roles.get(0);
             roles.remove(0);
-
         }
 
     }
@@ -133,7 +129,7 @@ public class God {
 
         ArrayList<Role> roles = new ArrayList<>();
 
-
+/*
         roles.add(new CityDoctor());
         nRoles--;
         if (nRoles == 0){
@@ -169,6 +165,8 @@ public class God {
         if (nRoles == 0){
             return roles;
         }
+
+ */
 
         roles.add(new Mayor());
         nRoles--;
@@ -218,8 +216,9 @@ public class God {
 
         for (Player p: actives){
             p.introduction();
-            listOfAllPlayers.append(p.getUserName()).append(" was ").append(p.role.getName()).append("\n");
+            listOfAllPlayers.append(p.getUserName()).append(" :: ").append(p.role.getName()).append("\n");
         }
+        System.out.println(listOfAllPlayers.toString());
     }
 
     /**
@@ -269,6 +268,12 @@ public class God {
 
         keepWaiting();
         notifyEverybody("Election is done.");
+
+        for(Player p: actives){
+            if (p.isWaitingForInput()){
+                p.sendToClient("Time's up");
+            }
+        }
 
         for (Player p: actives) {
             int answer = p.getAnswerOfWho();
@@ -591,7 +596,9 @@ public class God {
             actives.remove(toDie);
             notifyEverybody(PURPLE + toDie.getUserName() + RESET + " Died!\n");
             watchers.add(toDie);
-            toDie.suggestWatching();
+
+            if (!gameIsOver())
+                toDie.suggestWatching();
         }
         catch (NullPointerException e){
             System.out.println("Player has been killed before!");
@@ -758,18 +765,20 @@ public class God {
      */
     public void endGame() {
 
-        Iterator<Player> it = actives.iterator();
-
-        while (it.hasNext()) {
-            Player player = it.next();
-            player.end();
+        int n = actives.size();
+        for (int i = 0; i < n; i++){
+            removePlayer(actives.get(0));
         }
 
-        it = watchers.iterator();
+        n = watchers.size();
+        for (int i = 0; i < n; i++){
+            removePlayer(watchers.get(0));
+        }
 
-        while (it.hasNext()) {
-            Player player = it.next();
-            player.end();
+        try {
+            server.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

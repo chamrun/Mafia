@@ -31,8 +31,11 @@ public class Player implements Runnable{
     ChatHandler chatHandler;
     AskingHandler askingWhoHandler;
 
-    private boolean isInactive = false;
-    private int inactiveTurns = 0;
+    boolean waitingForInput = false;
+
+    public boolean isWaitingForInput() {
+        return waitingForInput;
+    }
 
     /**
      * Instantiates a new Player.
@@ -185,7 +188,7 @@ public class Player implements Runnable{
      * Introduction which players get in first night
      */
     public void introduction() {
-        String massage = "Your role is: " + PURPLE + role.getName() + RESET + "\n" + role.description();
+        String massage = "Your role is: " + PURPLE + role.getName() + RESET + "\n" + role.description() + "\n";
 
         if (role instanceof Mayor) {
             massage += god.whoIsCityDoctor(this);
@@ -240,12 +243,30 @@ public class Player implements Runnable{
     public void setVote(int answer) {
 
         answerOfWho = answer;
-        sendToClient("Got it. before it's too late, you can write -1 to change your vote.");
+        sendToClient("Got it.");
         isBusy = false;
 
         if (god.nobodyIsBusy()){
             god.stopWaiting();
+            return;
         }
+
+        sendToClient("Before it's too late, you can write 0 to change your vote.");
+
+        int choice = 1;
+
+        try {
+            waitingForInput = true;
+            choice = Integer.parseInt(in.readUTF());
+            waitingForInput = false;
+        }
+        catch (IOException ignored){}
+
+        if (choice == 0) {
+            isBusy = true;
+            vote();
+        }
+
     }
 
 
@@ -410,17 +431,6 @@ public class Player implements Runnable{
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * Activated.
-     */
-    public void activated(){
-
-        if(inactiveTurns == 3){
-            isInactive = true;
         }
     }
 

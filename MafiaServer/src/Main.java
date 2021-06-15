@@ -1,8 +1,11 @@
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
+import java.net.BindException;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Collection;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 
@@ -21,21 +24,27 @@ public class Main {
      *
      * @param args the args
      */
-    public static void main(String[] args){
-
-        System.out.println();
+    public static void main(String[] args) {
 
         while (true) {
-            System.out.println("What to do?\n" +
+            System.out.println("\nWhat to do?\n" +
                     "0. New Game\n" +
                     "1. Saved Games\n" +
                     "2. Exit");
 
-            int choice = sc.nextInt();
+            int choice;
+
+            try {
+                choice = 1;//sc.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println("What the hell :/ ?");
+                return;
+            }
 
             switch (choice) {
                 case 0:
                     newGame();
+                    break;
 
                 case 1:
                     loadGame();
@@ -43,6 +52,7 @@ public class Main {
 
                 case 2:
                     System.out.println("Bye!");
+                    System.exit(0);
                     return;
 
                 default:
@@ -50,7 +60,6 @@ public class Main {
                     break;
             }
         }
-
 
     }
 
@@ -136,14 +145,9 @@ public class Main {
             return;
         }
 
-        final God god = new God();
+        ServerSocket server = getServer();
 
-        ServerSocket server = null;
-        try {
-            server = new ServerSocket(5056);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        final God god = new God(server);
 
         System.out.println("Now Clients Should connect to:\naddr: " + server.getInetAddress() + "\nPort: " + server.getLocalPort() + "\n");
 
@@ -158,26 +162,20 @@ public class Main {
      * Makes a new God, takes players and start game
      */
     private static void newGame() {
-        final God god = new God();
 
-        System.out.println("How many Players? (at least 5)");
-        int nOfAllPlayers = sc.nextInt();
+        int nOfAllPlayers = 3;//sc.nextInt();
 
         while (nOfAllPlayers < 3) {
             System.out.println("at least 5:");
             nOfAllPlayers = sc.nextInt();
         }
 
-        ServerSocket server = null;
-        try {
-            server = new ServerSocket(5056);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.print("unable to use 5056.");
-            return;
-        }
+        ServerSocket server = getServer();
+        final God god = new God(server);
 
-        System.out.println("Now Clients Should connect to:\naddr: " + server.getInetAddress() + "\nPort: " + server.getLocalPort() + "\n");
+        System.out.println("Now Clients Should connect to:\n" +
+                "addr: " + server.getInetAddress() + "\n" +
+                "Port: " + server.getLocalPort() + "\n");
 
         for (int i = 0; i < nOfAllPlayers; i++) {
             god.addActive(server);
@@ -210,6 +208,36 @@ public class Main {
         startGame(god);
     }
 
+    private static ServerSocket getServer() {
+
+        ServerSocket server = null;
+
+        try {
+            server = new ServerSocket(5056);
+        } catch (BindException e) {
+            System.out.println("Address already in use.\nTry Another Port: ");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("unable to use 5056.");
+        }
+
+        while (server == null) {
+            try {
+                server = new ServerSocket(sc.nextInt());
+            } catch (BindException e) {
+                System.out.println("Address already in use.\nTry Another Port: ");
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("unable to use 5056.");
+            }
+        }
+
+        return server;
+
+    }
+
     /**
      * When god and all players are ready, we use this method to turn game.
      * @param god a good god contain all we need to start a game!
@@ -220,7 +248,6 @@ public class Main {
 
         god.turnFirstNight();
 
-        //Keeps turning game and checks if game is over time by time.
         while (true) {
 
             System.out.println("Day...");
@@ -244,7 +271,7 @@ public class Main {
         }
 
         System.out.println("... The end.");
-        System.exit(0);
+
     }
 
 }
