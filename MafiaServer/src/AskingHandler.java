@@ -38,6 +38,12 @@ public class AskingHandler extends Thread {
     String answer;
 
     /**
+     * the time we have to vote.
+     */
+    private long duration;
+    private long start; // the Time we start to vote
+
+    /**
      * Instantiates a new Asking handler.
      *
      * @param god    the god
@@ -52,13 +58,23 @@ public class AskingHandler extends Thread {
         this.type = type;
     }
 
+    public AskingHandler(God god, Player player, String type, long duration){
+        this.god = god;
+        this.player = player;
+        this.in = player.in;
+        this.out = player.out;
+        this.type = type;
+        this.duration = duration;
+    }
+
     @Override
     public void run() {
 
         try {
 
-            long start = System.currentTimeMillis();
-            long end = start + 30000;
+            start = System.currentTimeMillis();
+            // the Time we can't vote anymore.
+            long end = start + duration;
 
 
             switch (type){
@@ -76,7 +92,7 @@ public class AskingHandler extends Thread {
                                 }
                             }
                         }
-                    }, 31000); // if there won't be a answer in time, asked Client to say something to free DataInputStream
+                    }, duration + 100); // if there won't be a answer in time, asked Client to say something to free DataInputStream
 
                     StringBuilder massage = new StringBuilder("\nWho do you vote? (Enter number)\n-1: Nobody\n");
 
@@ -104,7 +120,7 @@ public class AskingHandler extends Thread {
                         return;
                     }
 
-                    player.setVote(indexOfAnswer);
+                    player.setVote(indexOfAnswer, start);
 
                     break;
 
@@ -215,7 +231,7 @@ public class AskingHandler extends Thread {
         }
         catch (NumberFormatException e){
             System.out.println("invalid input in askingHandler. Needed number.");
-            player.setVote(-1);
+            player.setVote(-1, start);
             player.setNightAct(-1);
         }
         catch (IOException e) {

@@ -9,20 +9,24 @@ import java.util.HashMap;
 public class Backup implements Serializable {
     private final String title;
     private final HashMap<String, Role> map;
-    String date;
+    private final String finalReport;
+    private final String date;
+    int numberOfPlayers;
 
     /**
      * Instantiates a new Backup.
      *
      * @param title the title we choose for this backup
      */
-    public Backup(String title){
+    public Backup(String title, String finalReport){
         this.title = title;
+        this.finalReport = finalReport;
         map = new HashMap<>();
 
         LocalDate date = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         this.date = formatter.format(date);
+        numberOfPlayers = 0;
     }
 
     /**
@@ -33,6 +37,7 @@ public class Backup implements Serializable {
      */
     public void addToMap(String name, Role role){
         map.put(name, role);
+        numberOfPlayers = map.size();
     }
 
     /**
@@ -50,7 +55,7 @@ public class Backup implements Serializable {
      * @return Number of players in saved game.
      */
     public int nPlayers(){
-        return map.size();
+        return numberOfPlayers;
     }
 
     /**
@@ -61,9 +66,8 @@ public class Backup implements Serializable {
      */
     public boolean nameExists(String name){
 
-        for (String n: map.keySet()){
-
-            if (name.equals(n))
+        for (String exitingName: map.keySet()){
+            if (name.equals(exitingName))
                 return true;
 
         }
@@ -78,7 +82,12 @@ public class Backup implements Serializable {
      * @return the role of player with that name
      */
     public Role getRole(String name){
-        return map.get(name);
+        Role tempRole = map.get(name);
+        map.remove(name);
+        return tempRole;
     }
 
+    public String getReport() {
+        return finalReport;
+    }
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.nio.ByteBuffer;
 import java.util.Scanner;
 
 
@@ -16,6 +17,8 @@ public class Command extends Thread{
      */
     God god;
 
+    private boolean running;
+
     /**
      * Instantiates a new Command.
      *
@@ -23,16 +26,25 @@ public class Command extends Thread{
      */
     public Command(God god){
         this.god = god;
-        System.out.println("\nCommands: Save, Close, StopCommanding");
+        System.out.println("\nCommands: Save, Close, Menu, StopCommanding, Exit");
+        running = true;
     }
 
     Scanner sc = new Scanner(System.in);
+
+    String[] args = new String[0];
 
     @Override
     public void run() {
 
         while (true){
-            String command = sc.nextLine();
+
+            String command = "NaN";
+
+            if (running) {
+                command = sc.nextLine();
+            }
+
 
             switch (command) {
                 case "Save":
@@ -41,18 +53,35 @@ public class Command extends Thread{
 
                 case "Close":
                     god.endGame();
-                    String[] args = new String[0];
                     Main.main(args);
+                    break;
+
+                case "Menu":
+                    Main.main(args);
+                    break;
+
+                case "Exit":
+                    System.out.println("Bye!");
+                    System.exit(0);
                     break;
 
                 case "StopCommanding":
                     System.out.println("Ok :/");
                     return;
 
+                case "NaN":
+                    System.out.println("CommandLine was closed.");
+                    return;
+
                 default:
                     System.out.println("Undefined Command.");
             }
         }
+    }
+
+    @Override
+    public void interrupt() {
+        running = false;
     }
 
     private void save(){

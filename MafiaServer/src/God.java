@@ -27,7 +27,7 @@ public class God {
     /**
      * it's used in the end of game.
      */
-    private final StringBuilder listOfAllPlayers;
+    private String finalReport;
 
     /**
      * Instantiates a new God.
@@ -36,7 +36,6 @@ public class God {
         this.server = server;
         actives = new ArrayList<>();
         watchers = new ArrayList<>();
-        listOfAllPlayers = new StringBuilder();
         waiting = false;
     }
 
@@ -129,7 +128,7 @@ public class God {
 
         ArrayList<Role> roles = new ArrayList<>();
 
-/*
+
         roles.add(new CityDoctor());
         nRoles--;
         if (nRoles == 0){
@@ -166,7 +165,7 @@ public class God {
             return roles;
         }
 
- */
+
 
         roles.add(new Mayor());
         nRoles--;
@@ -213,12 +212,27 @@ public class God {
      * Turn first night and sends players their roles.
      */
     public void turnFirstNight() {
+        StringBuilder stringBuilder = new StringBuilder();
 
         for (Player p: actives){
             p.introduction();
-            listOfAllPlayers.append(p.getUserName()).append(" :: ").append(p.role.getName()).append("\n");
+            stringBuilder.append(p.getUserName()).append(" :: ").append(p.role.getName()).append("\n");
         }
-        System.out.println(listOfAllPlayers.toString());
+
+        finalReport = stringBuilder.toString();
+        System.out.println(finalReport);
+    }
+
+    /**
+     * Turn first night and sends players their roles.
+     */
+    public void turnFirstNight(String finalReport) {
+        this.finalReport = finalReport;
+
+        for (Player p: actives){
+            p.introduction();
+        }
+        System.out.println(finalReport);
     }
 
     /**
@@ -263,7 +277,7 @@ public class God {
         waiting = true;
 
         for (Player p: actives) {
-            p.vote();
+            p.vote(30000);
         }
 
         keepWaiting();
@@ -510,15 +524,20 @@ public class God {
      * @param except  the person who won't get this massage
      */
     public void notifyEverybody(String massage, Player except) {
-        for (Player p: actives){
-            if (!p.equals(except)){
+
+        try {
+            for (Player p: actives){
+                if (!p.equals(except)){
+                    p.sendToClient(massage);
+                }
+            }
+
+            for (Player p: watchers) {
                 p.sendToClient(massage);
             }
-        }
 
-        for (Player p: watchers) {
-            p.sendToClient(massage);
         }
+        catch (ConcurrentModificationException ignored){}
     }
 
     /**
@@ -754,8 +773,8 @@ public class God {
             notifyEverybody("\nCitizens are won!");
         }
 
-        System.out.println(listOfAllPlayers.toString());
-        notifyEverybody(listOfAllPlayers.toString());
+        System.out.println(finalReport);
+        notifyEverybody(finalReport);
 
         endGame();
     }
@@ -807,7 +826,7 @@ public class God {
      * @return the backup
      */
     public Backup getBackUp(String title){
-        Backup backup = new Backup(title);
+        Backup backup = new Backup(title, finalReport);
 
         for (Player p: actives){
             backup.addToMap(p.getUserName(), p.role);

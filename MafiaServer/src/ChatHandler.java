@@ -85,6 +85,12 @@ public class ChatHandler extends Thread{
         }
         catch (IOException e) {
             System.out.println(player.getUserName() + " disconnected.");
+            player.isBusy = false;
+            running = false;
+            if (god.nobodyIsBusy()) {
+                god.notifyEverybody("Chatroom is empty.\n");
+                god.stopWaiting();
+            }
             god.removePlayer(player);
         }
     }

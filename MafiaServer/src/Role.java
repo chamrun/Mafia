@@ -315,7 +315,7 @@ class Sniper extends Citizen{
 
     @Override
     public String actQuestion() {
-        return "Who do you wanna kill?";
+        return "Who do you wanna snipe?";
     }
 
     @Override

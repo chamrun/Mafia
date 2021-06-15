@@ -97,7 +97,7 @@ public class Main {
                 }
 
                 System.out.println("Hello " + name + "!\nYou've been registered successfully.\n" +
-                        "You can write EXIT to leave, but please don't =(");
+                        "You can write Exit to leave, but please don't =(\n");
                 //sc.nextLine();
 
                 (new Listening(in, out)).start();
@@ -107,7 +107,7 @@ public class Main {
 
                     String myMassage = sc.nextLine();
 
-                    if (myMassage.equals("EXIT")){
+                    if (myMassage.equals("Exit")){
                         System.out.println("Goodbye!");
                         in.close();
                         out.close();

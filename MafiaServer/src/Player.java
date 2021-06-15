@@ -151,6 +151,7 @@ public class Player implements Runnable{
             god.notifyEverybody((god.nActives() + 1) + " actives.");
 
             role = backup.getRole(name);
+            System.out.println(name + ": " + role);
 
             god.addPlayer(this);
 
@@ -226,10 +227,10 @@ public class Player implements Runnable{
     /**
      * Vote by asking handler
      */
-    public void vote(){
+    public void vote(long time){
 
         isBusy = true;
-        askingWhoHandler = new AskingHandler(god, this, "Vote");
+        askingWhoHandler = new AskingHandler(god, this, "Vote", time);
         askingWhoHandler.start();
 
     }
@@ -240,7 +241,7 @@ public class Player implements Runnable{
      *
      * @param answer the answer
      */
-    public void setVote(int answer) {
+    public void setVote(int answer, long startTime) {
 
         answerOfWho = answer;
         sendToClient("Got it.");
@@ -258,14 +259,14 @@ public class Player implements Runnable{
         try {
             waitingForInput = true;
             choice = Integer.parseInt(in.readUTF());
-            waitingForInput = false;
         }
         catch (IOException ignored){}
 
         if (choice == 0) {
-            isBusy = true;
-            vote();
+            vote(30000 - (System.currentTimeMillis() - startTime));
         }
+
+        waitingForInput = false;
 
     }
 

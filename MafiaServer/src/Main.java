@@ -3,7 +3,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.*;
 import java.net.BindException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Collection;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -27,18 +26,22 @@ public class Main {
     public static void main(String[] args) {
 
         while (true) {
-            System.out.println("\nWhat to do?\n" +
-                    "0. New Game\n" +
-                    "1. Saved Games\n" +
-                    "2. Exit");
 
-            int choice;
+            int choice = -1;
 
             try {
-                choice = 1;//sc.nextInt();
-            } catch (InputMismatchException e) {
-                System.out.println("What the hell :/ ?");
-                return;
+                while (choice < 0 || 2 < choice) {
+                    System.out.println("\nWhat to do?\n" +
+                            "0. New Game\n" +
+                            "1. Saved Games\n" +
+                            "2. Exit");
+                    choice = Integer.parseInt(sc.nextLine());
+                }
+            }
+            catch (IndexOutOfBoundsException ignored) {}
+            catch (NumberFormatException e) {
+                System.out.println("You should write a number -_-");
+                main(args);
             }
 
             switch (choice) {
@@ -56,7 +59,7 @@ public class Main {
                     return;
 
                 default:
-                    System.out.println("Undefined. Again: ");
+                    System.out.println(choice + ": Menu/Undefined");
                     break;
             }
         }
@@ -70,7 +73,6 @@ public class Main {
     private static void loadGame() {
 
         File directory = new File("savedGames\\");
-
 
         Collection<File> files = FileUtils.listFiles(directory,
                 new String[] {"txt"}, true); // All saved games
@@ -96,45 +98,50 @@ public class Main {
                 }
             }
 
-            System.out.println("\nEnter title of a saved game to open it ('0' to go back)");
-            sc.nextLine();
-            String note = sc.nextLine();
+            System.out.println("\nEnter title of a saved game to open it ('-1' to go back)");
+            String title = sc.nextLine();
 
-            if (!note.equals("0")) {
+            if (title.equals("-1")){
+                return;
+            }
 
-                for (File f : files) {
-                    if (f.getName().equalsIgnoreCase(note)
-                            || f.getName().equalsIgnoreCase(note + ".txt")) {
 
-                        FileInputStream fis = new FileInputStream(f);
-                        ObjectInputStream ois = new ObjectInputStream(fis);
 
+            for (File f : files) {
+                if (f.getName().equalsIgnoreCase(title)
+                        || f.getName().equalsIgnoreCase(title + ".txt")) {
+
+                    FileInputStream fis = new FileInputStream(f);
+                    ObjectInputStream ois = new ObjectInputStream(fis);
+
+                    try {
+                        backup = (Backup) ois.readObject();
+
+                    } catch (ClassNotFoundException | IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("\n0. Delete\n" +
+                            "1. Play");
+
+                    int choice = sc.nextInt();
+                    fis.close();
+                    ois.close();
+
+
+                    if (choice == 0) {
                         try {
-                            backup = (Backup) ois.readObject();
-
-                        } catch (ClassNotFoundException | IOException e) {
+                            FileUtils.forceDelete(f);
+                            System.out.println("Deleted Successfully.");
+                            return;
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
-
-                        System.out.println("\n0. Delete\n" +
-                                "1. Play");
-
-                        int choice = sc.nextInt();
-                        fis.close();
-                        ois.close();
-
-
-                        if (choice == 0) {
-                            try {
-                                FileUtils.forceDelete(f);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        break;
                     }
+                    break;
                 }
             }
+
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -151,10 +158,16 @@ public class Main {
 
         System.out.println("Now Clients Should connect to:\naddr: " + server.getInetAddress() + "\nPort: " + server.getLocalPort() + "\n");
 
+        if (backup.nPlayers() == 0){
+            System.out.println(backup.getReport());
+            return;
+        }
+
         for (int i = 0; i < backup.nPlayers(); i++) {
             god.addActive(server, backup);
         }
 
+        god.turnFirstNight(backup.getReport());
         startGame(god);
     }
 
@@ -163,10 +176,11 @@ public class Main {
      */
     private static void newGame() {
 
-        int nOfAllPlayers = 3;//sc.nextInt();
+        System.out.println("How many Players? (at least 3)");
+        int nOfAllPlayers = sc.nextInt();
 
         while (nOfAllPlayers < 3) {
-            System.out.println("at least 5:");
+            System.out.println("at least 3:");
             nOfAllPlayers = sc.nextInt();
         }
 
@@ -205,6 +219,7 @@ public class Main {
         god.setRandomRoles();
         System.out.println("Roles Are Set.");
 
+        god.turnFirstNight();
         startGame(god);
     }
 
@@ -244,9 +259,8 @@ public class Main {
      */
     private static void startGame(God god) {
 
-        (new Command(god)).start(); // Keeps listening to us for "SAVE" or "EXIT" command.
-
-        god.turnFirstNight();
+        Command command = new Command(god);
+        command.start(); // Keeps listening to us for "SAVE" or "EXIT" command.
 
         while (true) {
 
@@ -271,6 +285,7 @@ public class Main {
         }
 
         System.out.println("... The end.");
+        command.interrupt();
 
     }
 
