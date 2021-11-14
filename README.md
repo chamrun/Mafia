@@ -1,5 +1,5 @@
 # Mafia
-Mafia (also known as werewolf) is a social deduction game, here written in Java.
+Mafia (also known as werewolf) is a social deduction game, and this is Mafia built with Java.
  
 [Click to read more about this game.](https://en.wikipedia.org/wiki/Mafia_(party_game))
 
