@@ -9,8 +9,8 @@ Project contains server and client, connecting by socket.
 
 Some of options:
 
-  Saving games and loading them later.
-  
-  changing votes before vote time is up.
-  
-  Chatroom support all UTF characters (Persian, etc...).
+   Saving games and loading them later.
+   
+   changing votes before vote time is up.
+   
+   Chatroom support all UTF characters (Persian, etc...).
